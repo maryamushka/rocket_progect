@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Раскраска</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .coloring-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .coloring-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .coloring-title {
+            color: #ffff00;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .coloring-canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .coloring-canvas {
+            border: 4px solid #00ffff;
+            border-radius: 20px;
+            background: #222;
+            cursor: crosshair;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .controls-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .color-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #666;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover,
+        .color-option.active {
+            transform: scale(1.2);
+            border-color: white;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .brush-size {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+
+        .brush-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #00ffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .brush-btn.active {
+            background: #00ffff;
+            color: black;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-5px);
+        }
+
+        .clear-btn {
+            background: linear-gradient(45deg, #ff4444, #ff0000);
+            color: white;
+        }
+
+        .save-btn {
+            background: linear-gradient(45deg, #44ff44, #00aa00);
+            color: white;
+        }
+
+        .back-btn {
+            background: linear-gradient(45deg, #4444ff, #0000ff);
+            color: white;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #ffff44, #ffaa00);
+            color: black;
+        }
+
+        .star-reward {
+            text-align: center;
+            margin-top: 20px;
+            color: gold;
+            font-size: 1.1rem;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #ff0066, #ff5500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Индикатор загрузки */
+        .loading-indicator {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            z-index: 2000;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="kid-mode">
+    <div class="starfield"></div>
+
+    <button class="back-button" onclick="window.location.href='/coloring_gallery'">
+        <i class="fas fa-arrow-left"></i> Выбрать другую
+    </button>
+
+    <!-- Индикатор загрузки -->
+    <div class="loading-indicator" id="loading-indicator">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🎨</div>
+        <div>Загружаем раскраску...</div>
+    </div>
+
+    <div class="container">
+        <div class="coloring-container">
+            <div class="coloring-header">
+                <h1 class="coloring-title" id="coloring-title">🎨 Раскраска</h1>
+                <p style="color: #aaa;">Выбери цвет и рисуй прямо на картинке!</p>
+            </div>
+
+            <div class="coloring-canvas-container">
+                <canvas id="coloring-canvas" width="800" height="600" class="coloring-canvas">
+                    Ваш браузер не поддерживает Canvas
+                </canvas>
+
+                <div class="controls-section">
+                    <!-- Палитра цветов -->
+                    <h3 style="color: #00ffff; text-align: center; margin-bottom: 15px;">🎨 Цвета:</h3>
+                    <div class="color-palette" id="color-palette">
+                        <!-- Динамически генерируем цвета -->
+                    </div>
+
+                    <!-- Размер кисти -->
+                    <h3 style="color: #00ffff; text-align: center; margin-bottom: 15px;">🖌️ Размер кисти:</h3>
+                    <div class="brush-size">
+                        <button class="brush-btn active" onclick="setBrushSize(5)">•</button>
+                        <button class="brush-btn" onclick="setBrushSize(10)">••</button>
+                        <button class="brush-btn" onclick="setBrushSize(15)">•••</button>
+                        <button class="brush-btn" onclick="setBrushSize(20)">••••</button>
+                        <button class="brush-btn" onclick="setBrushSize(25)">•••••</button>
+                    </div>
+
+                    <!-- Кнопки действий -->
+                    <div class="action-buttons">
+                        <button class="action-btn clear-btn" onclick="clearCanvas()">
+                            <i class="fas fa-eraser"></i> Очистить
+                        </button>
+                        <button class="action-btn save-btn" onclick="saveDrawing()">
+                            <i class="fas fa-save"></i> Сохранить
+                        </button>
+                        <button class="action-btn download-btn" onclick="downloadDrawing()">
+                            <i class="fas fa-download"></i> Скачать
+                        </button>
+                        <button class="action-btn back-btn" onclick="window.location.href='/coloring_gallery'">
+                            <i class="fas fa-images"></i> Галерея
+                        </button>
+                    </div>
+
+                    <div class="star-reward" id="star-reward">
+                        ⭐ За сохранение получишь +3 звезды!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Переменные для рисования
+        let canvas, ctx;
+        let isDrawing = false;
+        let currentColor = '#ff0000';
+        let brushSize = 10;
+        let originalImage = null;
+
+        // Цветовая палитра
+        const colors = [
+            '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff',
+            '#00ffff', '#ffffff', '#000000', '#ff8800', '#8800ff',
+            '#008888', '#888800', '#880000', '#008800', '#000088'
+        ];
+
+        // Загружаем раскраску
+        function loadColoring() {
+            console.log('Начинаем загрузку раскраски...');
+
+            canvas = document.getElementById('coloring-canvas');
+            ctx = canvas.getContext('2d');
+
+            // Показываем индикатор загрузки
+            document.getElementById('loading-indicator').style.display = 'block';
+
+            // Получаем выбранную картинку
+            const selected = localStorage.getItem('selectedColoring');
+            if (selected) {
+                try {
+                    const imageData = JSON.parse(selected);
+                    console.log('Загружаем изображение:', imageData);
+                    document.getElementById('coloring-title').textContent = `🎨 ${imageData.name}`;
+                    loadImage(imageData.path);
+                } catch (error) {
+                    console.error('Ошибка парсинга JSON:', error);
+                    loadDefaultImage();
+                }
+            } else {
+                // Если нет выбранной картинки, загружаем дефолтную
+                console.log('Нет выбранной картинки, загружаем дефолтную');
+                loadDefaultImage();
+            }
+
+            // Инициализируем палитру
+            initColorPalette();
+
+            // Настраиваем события рисования
+            setupDrawingEvents();
+        }
+
+        // Загружаем дефолтное изображение
+        function loadDefaultImage() {
+            document.getElementById('coloring-title').textContent = '🎨 Ракета';
+            // Рисуем простую ракету
+            drawDefaultContour();
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+
+        // Загружаем изображение с белым фоном и черными контурами
+        function loadImage(imageUrl) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+
+            img.onload = function() {
+                console.log('Изображение успешно загружено:', imageUrl, 'Размер:', img.width, 'x', img.height);
+                originalImage = img;
+
+                // Настраиваем размеры canvas под изображение
+                const maxWidth = 800;
+                const maxHeight = 600;
+
+                let width = img.width;
+                let height = img.height;
+
+                // Масштабируем если нужно
+                if (width > maxWidth || height > maxHeight) {
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width = Math.floor(width * ratio);
+                    height = Math.floor(height * ratio);
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // 1. Рисуем белый фон
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 2. Рисуем изображение
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // 3. Преобразуем изображение: оставляем только контуры
+                convertToColoringPage();
+
+                // Скрываем индикатор загрузки
+                document.getElementById('loading-indicator').style.display = 'none';
+            };
+
+            img.onerror = function(error) {
+                console.error('Не удалось загрузить изображение:', imageUrl, error);
+                alert('Не удалось загрузить изображение. Пожалуйста, выберите другую раскраску.');
+                document.getElementById('loading-indicator').style.display = 'none';
+                drawDefaultContour();
+            };
+
+            console.log('Пытаемся загрузить изображение по URL:', imageUrl);
+            img.src = imageUrl;
+        }
+
+        // Преобразуем изображение в страницу для раскраски
+        function convertToColoringPage() {
+            try {
+                // Получаем данные пикселей
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+
+                    // Проверяем, является ли пиксель "белым" (фоном)
+                    // Белый цвет: RGB близко к (255, 255, 255)
+                    const isWhiteBackground = r > 240 && g > 240 && b > 240;
+
+                    if (isWhiteBackground) {
+                        // Белый фон - оставляем белым
+                        data[i] = 255;     // R
+                        data[i + 1] = 255; // G
+                        data[i + 2] = 255; // B
+                        // Прозрачность 255 (непрозрачный)
+                        data[i + 3] = 255;
+                    } else {
+                        // Не белый пиксель - делаем его контуром (черным)
+                        const brightness = (r + g + b) / 3;
+
+                        if (brightness > 200) {
+                            // Очень светлые пиксели делаем белыми (фон)
+                            data[i] = 255;
+                            data[i + 1] = 255;
+                            data[i + 2] = 255;
+                        } else if (brightness < 100) {
+                            // Темные пиксели делаем черными (контур)
+                            data[i] = 0;
+                            data[i + 1] = 0;
+                            data[i + 2] = 0;
+                        } else {
+                            // Средние пиксели делаем серыми (тени/детали)
+                            const gray = Math.max(0, Math.min(255, brightness - 50));
+                            data[i] = gray;
+                            data[i + 1] = gray;
+                            data[i + 2] = gray;
+                        }
+                        data[i + 3] = 255; // Непрозрачный
+                    }
+                }
+
+                // Применяем обработанные данные
+                ctx.putImageData(imageData, 0, 0);
+                console.log('Преобразование изображения завершено');
+            } catch (error) {
+                console.error('Ошибка при преобразовании изображения:', error);
+            }
+        }
+
+        // Рисуем дефолтный контур ракеты
+        function drawDefaultContour() {
+            canvas.width = 800;
+            canvas.height = 600;
+
+            // Белый фон
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Чёрный контур ракеты
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+
+            // Ракета
+            ctx.beginPath();
+            ctx.moveTo(400, 550);
+            ctx.lineTo(350, 450);
+            ctx.lineTo(350, 100);
+            ctx.lineTo(450, 100);
+            ctx.lineTo(450, 450);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Окна
+            ctx.beginPath();
+            ctx.ellipse(400, 220, 25, 20, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Дверь
+            ctx.strokeRect(370, 300, 60, 40);
+
+            // Двигатель
+            ctx.beginPath();
+            ctx.moveTo(390, 400);
+            ctx.lineTo(390, 450);
+            ctx.lineTo(410, 450);
+            ctx.lineTo(410, 400);
+            ctx.closePath();
+            ctx.stroke();
+
+            console.log('Нарисован дефолтный контур ракеты');
+        }
+
+        // Инициализируем палитру цветов
+        function initColorPalette() {
+            const palette = document.getElementById('color-palette');
+            palette.innerHTML = '';
+
+            colors.forEach(color => {
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'color-option';
+                colorDiv.style.backgroundColor = color;
+                colorDiv.title = color;
+
+                if (color === currentColor) {
+                    colorDiv.classList.add('active');
+                }
+
+                colorDiv.addEventListener('click', () => {
+                    selectColor(color, colorDiv);
+                });
+
+                palette.appendChild(colorDiv);
+            });
+        }
+
+        // Выбираем цвет
+        function selectColor(color, element) {
+            currentColor = color;
+
+            // Обновляем активный цвет в палитре
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            console.log('Выбран цвет:', color);
+        }
+
+        // Устанавливаем размер кисти
+        function setBrushSize(size) {
+            brushSize = size;
+
+            // Обновляем активную кнопку размера
+            document.querySelectorAll('.brush-btn').forEach((btn, index) => {
+                const btnSize = [5, 10, 15, 20, 25][index];
+                btn.classList.toggle('active', btnSize === size);
+            });
+
+            console.log('Установлен размер кисти:', size);
+        }
+
+        // Настраиваем события рисования
+        function setupDrawingEvents() {
+            // Мышь
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // Тач-устройства
+            canvas.addEventListener('touchstart', handleTouchStart);
+            canvas.addEventListener('touchmove', handleTouchMove);
+            canvas.addEventListener('touchend', stopDrawing);
+
+            // Предотвращаем скролл при рисовании
+            canvas.addEventListener('touchmove', function(e) {
+                if (isDrawing) {
+                    e.preventDefault();
+                }
+            });
+
+            console.log('События рисования настроены');
+        }
+
+        // Функции рисования
+        function startDrawing(e) {
+            isDrawing = true;
+            draw(e);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            // Получаем координаты
+            let x, y;
+
+            if (e.type.includes('mouse')) {
+                x = e.offsetX;
+                y = e.offsetY;
+            } else if (e.type.includes('touch')) {
+                const rect = canvas.getBoundingClientRect();
+                x = e.touches[0].clientX - rect.left;
+                y = e.touches[0].clientY - rect.top;
+            }
+
+            // Проверяем, не пытаемся ли рисовать на белом фоне
+            // Получаем цвет пикселя под курсором
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const isWhiteBackground = pixel[0] > 250 && pixel[1] > 250 && pixel[2] > 250;
+
+            // Если это белый фон, не рисуем (чтобы не закрашивать фон)
+            if (isWhiteBackground) return;
+
+            // Рисуем
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = currentColor;
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        // Обработчики тач-событий
+        function handleTouchStart(e) {
+            if (e.touches.length === 1) {
+                e.preventDefault();
+                startDrawing(e);
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (e.touches.length === 1 && isDrawing) {
+                e.preventDefault();
+                draw(e);
+            }
+        }
+
+        // Очищаем canvas
+        function clearCanvas() {
+            if (confirm('Очистить весь рисунок?')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Если есть оригинальное изображение, рисуем его снова
+                if (originalImage) {
+                    ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+                    convertToColoringPage();
+                } else {
+                    drawDefaultContour();
+                }
+
+                console.log('Canvas очищен');
+            }
+        }
+
+        // Сохраняем рисунок
+        async function saveDrawing() {
+            // Преобразуем canvas в Data URL
+            const dataUrl = canvas.toDataURL('image/png');
+
+            // Сохраняем в localStorage
+            const savedDrawings = JSON.parse(localStorage.getItem('savedDrawings') || '[]');
+            savedDrawings.push({
+                url: dataUrl,
+                name: document.getElementById('coloring-title').textContent.replace('🎨 ', ''),
+                date: new Date().toISOString()
+            });
+
+            if (savedDrawings.length > 20) {
+                savedDrawings.shift(); // Сохраняем только последние 20 рисунков
+            }
+
+            localStorage.setItem('savedDrawings', JSON.stringify(savedDrawings));
+
+            // Начисляем звёзды через сервер
+            try {
+                const response = await fetch('/add_star', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        count: 3,
+                        reason: 'Сохранил раскраску'
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('🎨 Раскраска сохранена! +3 звезды');
+                    document.getElementById('star-reward').innerHTML = '⭐ Вы получили +3 звезды!';
+                }
+            } catch (error) {
+                showNotification('🎨 Раскраска сохранена локально!');
+            }
+
+            console.log('Рисунок сохранен');
+        }
+
+        // Скачиваем рисунок
+        function downloadDrawing() {
+            const link = document.createElement('a');
+            const fileName = `моя_раскраска_${Date.now()}.png`;
+            link.download = fileName;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            showNotification('📥 Раскраска скачана на компьютер!');
+            console.log('Рисунок скачан:', fileName);
+        }
+
+        // Показываем уведомление
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 100px;
+                    right: 20px;
+                    background: rgba(0,0,0,0.9);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 15px;
+                    border-left: 5px solid gold;
+                    max-width: 300px;
+                    z-index: 10000;
+                    animation: slideIn 0.3s;
+                ">
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Создаем звездное поле
+        function createStarfield() {
+            const starfield = document.querySelector('.starfield');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 3 + 1}px;
+                    height: ${Math.random() * 3 + 1}px;
+                    background: white;
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    animation: twinkle ${Math.random() * 3 + 2}s infinite;
+                    animation-delay: ${Math.random() * 3}s;
+                `;
+                starfield.appendChild(star);
+            }
+        }
+
+        // Загружаем при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Страница раскраски загружена');
+            createStarfield();
+            loadColoring();
+            setBrushSize(10);
+        });
+    </script>
+</body>
+</html>

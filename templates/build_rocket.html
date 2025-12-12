@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧩 Собери ракету</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-title {
+            color: #ffff00;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .game-instructions {
+            color: #aaa;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 20px;
+            line-height: 1.5;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .game-area {
+                flex-direction: row;
+            }
+        }
+
+        .parts-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            border: 3px solid #00ffff;
+        }
+
+        .rocket-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            border: 3px solid #ff00ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .section-title {
+            color: #00ffff;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .parts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .part-item {
+            background: linear-gradient(135deg, #3a3a7a, #4a4a9a);
+            border: 3px dashed #ffff00;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .part-item:hover {
+            transform: scale(1.05);
+            border-color: #00ffff;
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .part-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .part-name {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .rocket-silhouette {
+            width: 200px;
+            height: 400px;
+            background: linear-gradient(180deg, #666666, #333333);
+            border-radius: 100px 100px 20px 20px;
+            position: relative;
+            margin: 20px 0;
+            border: 4px solid #00ffaa;
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.3);
+        }
+
+        .drop-zone {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed #ffff00;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .drop-zone.hover {
+            background: rgba(0, 255, 170, 0.2);
+            border-color: #00ffaa;
+        }
+
+        .drop-zone.filled {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+            color: white;
+        }
+
+        .drop-zone.top {
+            top: 40px;
+            left: 50px;
+            right: 50px;
+            height: 80px;
+        }
+
+        .drop-zone.middle {
+            top: 140px;
+            left: 60px;
+            right: 60px;
+            height: 100px;
+        }
+
+        .drop-zone.bottom {
+            bottom: 60px;
+            left: 70px;
+            right: 70px;
+            height: 120px;
+        }
+
+        .drop-zone.engine {
+            bottom: 20px;
+            left: 85px;
+            right: 85px;
+            height: 40px;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-5px);
+        }
+
+        .check-btn {
+            background: linear-gradient(45deg, #00ff00, #00aa00);
+            color: white;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff4444, #aa0000);
+            color: white;
+        }
+
+        .back-btn {
+            background: linear-gradient(45deg, #4444ff, #0000aa);
+            color: white;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            color: #aaa;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            color: #ffff00;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .completion-message {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .completion-message.success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+        }
+
+        .completion-message.error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0000;
+            color: #ff0000;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #ff0066, #ff5500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .star-reward {
+            color: gold;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="kid-mode">
+    <div class="starfield"></div>
+
+    <button class="back-button" onclick="window.location.href='/games'">
+        <i class="fas fa-arrow-left"></i> К играм
+    </button>
+
+    <div class="container">
+        <div class="game-container">
+            <div class="game-header">
+                <h1 class="game-title">🧩 СОБЕРИ РАКЕТУ</h1>
+                <p class="game-instructions">
+                    Перетащи детали ракеты на правильные места! Каждая деталь должна оказаться в своей зоне.
+                    Собери ракету полностью, чтобы получить звёзды!
+                </p>
+            </div>
+
+            <div class="game-area">
+                <!-- Части ракеты для перетаскивания -->
+                <div class="parts-section">
+                    <h2 class="section-title">📦 Детали ракеты</h2>
+                    <div class="parts-grid" id="parts-container">
+                        <!-- Детали будут добавляться через JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Схема ракеты для сборки -->
+                <div class="rocket-section">
+                    <h2 class="section-title">🚀 Собери ракету здесь</h2>
+                    <div class="rocket-silhouette" id="rocket-silhouette">
+                        <!-- Зоны для сброса деталей -->
+                        <div class="drop-zone top" data-zone="top" data-part="nose">
+                            <span class="zone-label">👃 Нос ракеты</span>
+                        </div>
+                        <div class="drop-zone middle" data-zone="middle" data-part="body">
+                            <span class="zone-label">🚀 Корпус</span>
+                        </div>
+                        <div class="drop-zone bottom" data-zone="bottom" data-part="tank">
+                            <span class="zone-label">⛽ Топливный бак</span>
+                        </div>
+                        <div class="drop-zone engine" data-zone="engine" data-part="engine">
+                            <span class="zone-label">🔥 Двигатель</span>
+                        </div>
+                    </div>
+
+                    <!-- Статистика -->
+                    <div class="game-stats">
+                        <div class="stat-item">
+                            <div>Собрано:</div>
+                            <div class="stat-value" id="parts-collected">0</div>
+                            <div>из 4</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Попытки:</div>
+                            <div class="stat-value" id="attempts-count">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Сообщение о завершении -->
+                    <div class="completion-message" id="completion-message">
+                        <!-- Сообщение появится здесь -->
+                    </div>
+
+                    <!-- Звёзды за победу -->
+                    <div class="star-reward" id="star-reward">
+                        ⭐ За победу получишь +5 звёзд!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки управления -->
+            <div class="game-controls">
+                <button class="control-btn check-btn" onclick="checkRocket()">
+                    <i class="fas fa-check-circle"></i> Проверить сборку
+                </button>
+                <button class="control-btn reset-btn" onclick="resetGame()">
+                    <i class="fas fa-redo"></i> Начать заново
+                </button>
+                <button class="control-btn back-btn" onclick="window.location.href='/games'">
+                    <i class="fas fa-gamepad"></i> Другие игры
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Игровые переменные
+        let collectedParts = 0;
+        let totalParts = 4;
+        let attempts = 0;
+        let gameCompleted = false;
+        let draggedPart = null;
+
+        // Детали ракеты
+        const rocketParts = [
+            { id: 'nose', name: 'Нос ракеты', emoji: '👃', correctZone: 'top', description: 'Аэродинамический носовой обтекатель' },
+            { id: 'body', name: 'Корпус', emoji: '🚀', correctZone: 'middle', description: 'Основной корпус с кабиной космонавтов' },
+            { id: 'tank', name: 'Топливный бак', emoji: '⛽', correctZone: 'bottom', description: 'Хранит топливо для полёта' },
+            { id: 'engine', name: 'Двигатель', emoji: '🔥', correctZone: 'engine', description: 'Мощный ракетный двигатель' }
+        ];
+
+        // Инициализация игры
+        function initGame() {
+            console.log('Инициализация игры "Собери ракету"');
+
+            // Заполняем контейнер с деталями
+            const partsContainer = document.getElementById('parts-container');
+            partsContainer.innerHTML = '';
+
+            rocketParts.forEach(part => {
+                const partElement = document.createElement('div');
+                partElement.className = 'part-item';
+                partElement.id = `part-${part.id}`;
+                partElement.draggable = true;
+                partElement.dataset.partId = part.id;
+
+                partElement.innerHTML = `
+                    <div class="part-emoji">${part.emoji}</div>
+                    <div class="part-name">${part.name}</div>
+                `;
+
+                // Добавляем события для перетаскивания
+                partElement.addEventListener('dragstart', handleDragStart);
+                partElement.addEventListener('dragend', handleDragEnd);
+
+                partsContainer.appendChild(partElement);
+            });
+
+            // Добавляем события для зон сброса
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+
+            // Создаем звездное поле
+            createStarfield();
+
+            // Обновляем статистику
+            updateStats();
+
+            console.log('Игра инициализирована');
+        }
+
+        // Обработчики событий перетаскивания
+        function handleDragStart(e) {
+            if (gameCompleted) return;
+
+            draggedPart = e.target;
+            e.dataTransfer.setData('text/plain', e.target.dataset.partId);
+            e.target.style.opacity = '0.5';
+
+            console.log('Начали перетаскивание:', e.target.dataset.partId);
+        }
+
+        function handleDragEnd(e) {
+            e.target.style.opacity = '1';
+            draggedPart = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            if (gameCompleted) return;
+
+            e.preventDefault();
+            const zone = e.target.closest('.drop-zone');
+            if (zone && !zone.classList.contains('filled')) {
+                zone.classList.add('hover');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const zone = e.target.closest('.drop-zone');
+            if (zone) {
+                zone.classList.remove('hover');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            if (gameCompleted) return;
+
+            const zone = e.target.closest('.drop-zone');
+            if (!zone || zone.classList.contains('filled')) return;
+
+            const partId = e.dataTransfer.getData('text/plain');
+            const part = rocketParts.find(p => p.id === partId);
+
+            if (!part) return;
+
+            // Проверяем, правильная ли зона
+            const isCorrect = zone.dataset.part === partId;
+
+            if (isCorrect) {
+                // Правильная зона
+                zone.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem;">${part.emoji}</div>
+                        <div style="color: #00ff00; font-size: 0.9rem;">${part.name}</div>
+                        <div style="color: #aaa; font-size: 0.8rem;">✅ Верно!</div>
+                    </div>
+                `;
+                zone.classList.add('filled');
+                zone.classList.remove('hover');
+
+                // Скрываем перетаскиваемую деталь
+                const partElement = document.getElementById(`part-${partId}`);
+                partElement.style.display = 'none';
+
+                collectedParts++;
+                updateStats();
+
+                // Воспроизводим звук успеха
+                playSound('success');
+                showNotification(`✅ Отлично! ${part.name} на месте!`);
+
+                // Проверяем, собрана ли вся ракета
+                if (collectedParts === totalParts) {
+                    setTimeout(() => {
+                        completeGame();
+                    }, 500);
+                }
+            } else {
+                // Неправильная зона
+                zone.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem;">❌</div>
+                        <div style="color: #ff0000; font-size: 0.9rem;">Не сюда!</div>
+                    </div>
+                `;
+
+                // Через секунду возвращаем зону в исходное состояние
+                setTimeout(() => {
+                    zone.innerHTML = `<span class="zone-label">${zone.querySelector('.zone-label')?.textContent || 'Перетащи сюда'}</span>`;
+                    zone.classList.remove('hover');
+                }, 1000);
+
+                attempts++;
+                updateStats();
+
+                // Воспроизводим звук ошибки
+                playSound('error');
+                showNotification(`❌ ${part.name} не подходит для этой зоны!`);
+            }
+        }
+
+        // Проверка сборки
+        function checkRocket() {
+            if (gameCompleted) {
+                showNotification('🎉 Ракета уже собрана! Хочешь собрать еще раз?');
+                return;
+            }
+
+            attempts++;
+            updateStats();
+
+            if (collectedParts === totalParts) {
+                completeGame();
+            } else {
+                const message = document.getElementById('completion-message');
+                message.textContent = `Собрано ${collectedParts} из ${totalParts} деталей. Продолжай собирать!`;
+                message.className = 'completion-message error';
+                message.style.display = 'block';
+
+                playSound('error');
+
+                // Скрываем сообщение через 3 секунды
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Завершение игры
+        async function completeGame() {
+            gameCompleted = true;
+
+            const message = document.getElementById('completion-message');
+            message.innerHTML = `
+                🎉 УРА! РАКЕТА СОБРАНА!<br>
+                <small>Ты собрал ракету за ${attempts} попыток!</small>
+            `;
+            message.className = 'completion-message success';
+            message.style.display = 'block';
+
+            // Анимация ракеты
+            const rocket = document.getElementById('rocket-silhouette');
+            rocket.style.animation = 'rocketLaunch 2s forwards';
+
+            // Начисляем звёзды
+            const starsEarned = calculateStars();
+            try {
+                const response = await fetch('/add_star', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        count: starsEarned,
+                        reason: 'Собрал ракету в игре'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showNotification(`⭐ Получено ${starsEarned} звёзд! Всего: ${data.stars}`);
+                    document.getElementById('star-reward').innerHTML = `⭐ Вы получили +${starsEarned} звёзд!`;
+                }
+            } catch (error) {
+                console.log('Ошибка начисления звёзд:', error);
+                showNotification('🎉 Ракета собрана!');
+            }
+
+            // Воспроизводим звук победы
+            playSound('star');
+
+            // Обновляем статистику в профиле
+            updateUserProfile();
+        }
+
+        // Расчет количества звёзд
+        function calculateStars() {
+            let stars = 5; // Базовое количество
+
+            // Бонус за малое количество попыток
+            if (attempts <= 4) stars += 2;
+            else if (attempts <= 6) stars += 1;
+
+            return stars;
+        }
+
+        // Обновление статистики пользователя
+        async function updateUserProfile() {
+            try {
+                await fetch('/update_profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        games_played: 'increment',
+                        builds_completed: 'increment'
+                    })
+                });
+            } catch (error) {
+                console.log('Ошибка обновления профиля:', error);
+            }
+        }
+
+        // Сброс игры
+        function resetGame() {
+            collectedParts = 0;
+            attempts = 0;
+            gameCompleted = false;
+
+            // Сбрасываем зоны
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.innerHTML = `<span class="zone-label">${zone.dataset.part === 'nose' ? '👃 Нос ракеты' :
+                                                    zone.dataset.part === 'body' ? '🚀 Корпус' :
+                                                    zone.dataset.part === 'tank' ? '⛽ Топливный бак' :
+                                                    '🔥 Двигатель'}</span>`;
+                zone.classList.remove('filled', 'hover');
+            });
+
+            // Показываем все детали
+            rocketParts.forEach(part => {
+                const partElement = document.getElementById(`part-${part.id}`);
+                if (partElement) {
+                    partElement.style.display = 'block';
+                }
+            });
+
+            // Сбрасываем анимацию ракеты
+            const rocket = document.getElementById('rocket-silhouette');
+            rocket.style.animation = '';
+
+            // Скрываем сообщение
+            const message = document.getElementById('completion-message');
+            message.style.display = 'none';
+
+            // Сбрасываем награду
+            document.getElementById('star-reward').innerHTML = '⭐ За победу получишь +5 звёзд!';
+
+            updateStats();
+
+            showNotification('🔄 Игра сброшена! Начни заново!');
+            playSound('click');
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            document.getElementById('parts-collected').textContent = collectedParts;
+            document.getElementById('attempts-count').textContent = attempts;
+        }
+
+        // Звуки
+        function playSound(type) {
+            // В реальном проекте здесь были бы звуковые файлы
+            console.log('Воспроизведение звука:', type);
+        }
+
+        // Уведомления
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: rgba(0,0,0,0.9);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 15px;
+                border-left: 5px solid gold;
+                max-width: 300px;
+                z-index: 10000;
+                animation: slideIn 0.3s;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Создание звездного поля
+        function createStarfield() {
+            const starfield = document.querySelector('.starfield');
+            starfield.innerHTML = '';
+
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 3 + 1}px;
+                    height: ${Math.random() * 3 + 1}px;
+                    background: white;
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    animation: twinkle ${Math.random() * 3 + 2}s infinite;
+                    animation-delay: ${Math.random() * 3}s;
+                `;
+                starfield.appendChild(star);
+            }
+        }
+
+        // Добавляем CSS для анимаций
+        function addGameStyles() {
+            if (!document.getElementById('game-styles')) {
+                const style = document.createElement('style');
+                style.id = 'game-styles';
+                style.textContent = `
+                    @keyframes rocketLaunch {
+                        0% {
+                            transform: translateY(0) rotate(0deg);
+                            opacity: 1;
+                        }
+                        50% {
+                            transform: translateY(-50px) rotate(5deg);
+                            opacity: 0.8;
+                        }
+                        100% {
+                            transform: translateY(-100px) rotate(10deg);
+                            opacity: 0;
+                        }
+                    }
+
+                    @keyframes slideIn {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.7; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Страница игры "Собери ракету" загружена');
+            addGameStyles();
+            initGame();
+        });
+    </script>
+
+</body>
+</html>

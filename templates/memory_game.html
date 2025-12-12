@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Космическая память</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-title {
+            color: #ffff00;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .game-instructions {
+            color: #aaa;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 20px;
+            line-height: 1.5;
+        }
+
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .game-wrapper {
+                flex-direction: row;
+            }
+        }
+
+        .game-area {
+            flex: 3;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            border: 4px solid #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            min-height: 500px;
+            max-height: 600px; /* Ограничиваем высоту */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Скрываем всё что выходит */
+        }
+
+        /* Добавляем контейнер для карточек с прокруткой */
+        .cards-container {
+            flex-grow: 1;
+            overflow-y: auto; /* Вертикальная прокрутка */
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .game-info {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            border: 3px solid #ff00ff;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-section {
+            margin-bottom: 15px;
+        }
+
+        .info-title {
+            color: #00ffff;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            color: #ffff00;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .difficulty-btn {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00ffaa;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .difficulty-btn:hover {
+            background: rgba(0, 255, 170, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .difficulty-btn.active {
+            background: #00ffaa;
+            color: black;
+            font-weight: bold;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            flex-grow: 1;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+        }
+
+        .card {
+            aspect-ratio: 3/4;
+            background: linear-gradient(135deg, #3a3a7a, #4a4a9a);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            position: relative;
+            border: 3px solid transparent;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+            cursor: default;
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-back {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #2a2a5a, #3a3a7a);
+            transform: rotateY(180deg);
+            font-size: 3rem;
+            padding: 10px;
+        }
+
+        .card:hover:not(.flipped):not(.matched) {
+            border-color: #ffff00;
+            transform: translateY(-5px);
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-5px);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #00ff00, #00aa00);
+            color: white;
+        }
+
+        .hint-btn {
+            background: linear-gradient(45deg, #ffff00, #ffaa00);
+            color: black;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff4444, #aa0000);
+            color: white;
+        }
+
+        .back-btn {
+            background: linear-gradient(45deg, #4444ff, #0000aa);
+            color: white;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #ff0066, #ff5500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid gold;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+        }
+
+        .message-title {
+            color: gold;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .message-text {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .message-stats {
+            color: #aaa;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .timer-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .timer-display {
+            font-size: 2.5rem;
+            font-family: 'Digital-7', monospace;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            margin: 10px 0;
+        }
+
+        .timer-label {
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        .combo-counter {
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            padding: 10px;
+            text-align: center;
+            margin-top: 10px;
+            border: 2px solid gold;
+            display: none;
+        }
+
+        .combo-text {
+            color: gold;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .hint-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 12px;
+            display: none;
+            animation: pulseHint 2s infinite;
+        }
+
+        @keyframes pulseHint {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        .card-shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotateY(180deg) translateX(0); }
+            25% { transform: rotateY(180deg) translateX(-10px); }
+            75% { transform: rotateY(180deg) translateX(10px); }
+        }
+
+        .card-match {
+            animation: matchGlow 0.5s;
+        }
+
+        @keyframes matchGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px #00ff00;
+                transform: rotateY(180deg) scale(1);
+            }
+            50% {
+                box-shadow: 0 0 40px #00ff00;
+                transform: rotateY(180deg) scale(1.1);
+            }
+        }
+
+        .level-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: black;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="kid-mode">
+    <div class="starfield"></div>
+
+    <button class="back-button" onclick="window.location.href='/games'">
+        <i class="fas fa-arrow-left"></i> К играм
+    </button>
+
+    <div class="container">
+        <div class="game-container">
+            <div class="game-header">
+                <h1 class="game-title">🧠 КОСМИЧЕСКАЯ ПАМЯТЬ</h1>
+                <p class="game-instructions">
+                    Найди все пары одинаковых космических карточек! Чем быстрее и с меньшим количеством ходов - тем больше звёзд получишь!
+                </p>
+            </div>
+
+            <div class="game-wrapper">
+                <!-- Игровое поле -->
+                <div class="game-area">
+                    <div class="level-badge" id="levelBadge">ЛЁГКИЙ</div>
+
+                    <!-- Таймер -->
+                    <div class="timer-container">
+                        <div class="timer-label">⏱️ ВРЕМЯ</div>
+                        <div class="timer-display" id="timerDisplay">00:00</div>
+                    </div>
+
+                    <!-- Счётчик комбо -->
+                    <div class="combo-counter" id="comboCounter">
+                        <div class="combo-text" id="comboText">КОМБО x1!</div>
+                    </div>
+
+                    <!-- Сетка карточек -->
+                    <div class="cards-container">
+                        <div class="cards-grid" id="cardsGrid">
+                            <!-- Карточки будут создаваться через JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Информационная панель -->
+                <div class="game-info">
+                    <div class="info-section">
+                        <h2 class="info-title"><i class="fas fa-chart-bar"></i> СТАТИСТИКА</h2>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="movesValue">0</div>
+                                <div class="stat-label">📊 Ходов</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="pairsValue">0</div>
+                                <div class="stat-label">🧩 Найдено пар</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="accuracyValue">0%</div>
+                                <div class="stat-label">🎯 Точность</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="scoreValue">0</div>
+                                <div class="stat-label">⭐ Очки</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h2 class="info-title"><i class="fas fa-sliders-h"></i> УРОВЕНЬ СЛОЖНОСТИ</h2>
+                        <div class="difficulty-selector">
+                            <button class="difficulty-btn active" onclick="setDifficulty('easy')" id="easyBtn">
+                                🟢 ЛЁГКИЙ (6 пар)
+                            </button>
+                            <button class="difficulty-btn" onclick="setDifficulty('medium')" id="mediumBtn">
+                                🟡 СРЕДНИЙ (8 пар)
+                            </button>
+                            <button class="difficulty-btn" onclick="setDifficulty('hard')" id="hardBtn">
+                                🔴 СЛОЖНЫЙ (12 пар)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h2 class="info-title"><i class="fas fa-trophy"></i> НАГРАДЫ</h2>
+                        <div style="color: #aaa; font-size: 0.9rem; line-height: 1.5;">
+                            ⭐ +4 звезды за победу<br>
+                            ⭐ Бонус за скорость<br>
+                            ⭐ Бонус за точность<br>
+                            ⭐ Бонус за комбо<br>
+                            🏆 Максимум: 15 звёзд!
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h2 class="info-title"><i class="fas fa-lightbulb"></i> СОВЕТЫ</h2>
+                        <div style="color: #aaa; font-size: 0.9rem; line-height: 1.5;">
+                            • Запоминай расположение карточек<br>
+                            • Ищи парные картинки<br>
+                            • Используй подсказки при затруднении<br>
+                            • Строй комбо для бонусных очков
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки управления -->
+            <div class="game-controls">
+                <button class="control-btn start-btn" onclick="startGame()" id="startButton">
+                    <i class="fas fa-play"></i> Начать игру
+                </button>
+                <button class="control-btn hint-btn" onclick="useHint()" id="hintButton" disabled>
+                    <i class="fas fa-lightbulb"></i> Подсказка (<span id="hintCount">3</span>)
+                </button>
+                <button class="control-btn reset-btn" onclick="resetGame()">
+                    <i class="fas fa-redo"></i> Заново
+                </button>
+                <button class="control-btn back-btn" onclick="window.location.href='/games'">
+                    <i class="fas fa-gamepad"></i> Другие игры
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сообщение о победе -->
+    <div class="game-message" id="winMessage">
+        <div class="message-title">🎉 ПОБЕДА!</div>
+        <div class="message-text">Ты нашёл все пары!</div>
+        <div class="message-stats" id="winStats"></div>
+        <button class="control-btn start-btn" onclick="nextLevel()" style="width: 100%; margin-bottom: 10px;">
+            <i class="fas fa-arrow-right"></i> СЛЕДУЮЩИЙ УРОВЕНЬ
+        </button>
+        <button class="control-btn reset-btn" onclick="resetGame()" style="width: 100%;">
+            <i class="fas fa-redo"></i> ИГРАТЬ СНОВА
+        </button>
+    </div>
+
+    <!-- Сообщение о рекорде -->
+    <div class="game-message" id="recordMessage">
+        <div class="message-title">🏆 НОВЫЙ РЕКОРД!</div>
+        <div class="message-text" id="recordText"></div>
+        <div class="message-stats" id="recordStats"></div>
+        <button class="control-btn start-btn" onclick="closeMessage('recordMessage')" style="width: 100%;">
+            <i class="fas fa-check"></i> ОТЛИЧНО!
+        </button>
+    </div>
+
+    <script>
+        // Игровые переменные
+        let gameActive = false;
+        let gameStarted = false;
+        let timerInterval;
+        let seconds = 0;
+        let minutes = 0;
+
+        // Статистика игры
+        let stats = {
+            moves: 0,
+            pairsFound: 0,
+            totalPairs: 6,
+            accuracy: 0,
+            score: 0,
+            hints: 3,
+            combo: 0,
+            maxCombo: 0,
+            wrongGuesses: 0
+        };
+
+        // Настройки сложности
+        let difficulty = 'easy';
+        const difficulties = {
+            easy: { pairs: 6, timeBonus: 30, comboBonus: 5 },
+            medium: { pairs: 8, timeBonus: 45, comboBonus: 7 },
+            hard: { pairs: 12, timeBonus: 60, comboBonus: 10 }
+        };
+
+        // Карточки игры
+        let cards = [];
+        let flippedCards = [];
+        let matchedCards = [];
+        let cardEmojis = [];
+
+        // Игровые картинки (эмодзи)
+        const spaceEmojis = [
+            '🚀', '🪐', '⭐', '🌙', '👽', '👨‍🚀',
+            '🛰️', '☄️', '🌍', '🌌', '🛸', '🔭',
+            '💫', '🌟', '🪶', '🧪', '⚡', '🌀'
+        ];
+
+        // Инициализация игры
+        function initGame() {
+            console.log('Инициализация игры "Космическая память"');
+
+            // Создаем звездное поле
+            createStarfield();
+
+            // Инициализируем игру
+            setupGame();
+
+            console.log('Игра инициализирована');
+        }
+
+        // Настройка игры
+        function setupGame() {
+            // Сбрасываем статистику
+            resetStats();
+
+            // Создаем карточки
+            createCards();
+
+            // Обновляем UI
+            updateUI();
+
+            // Показываем сетку карточек
+            renderCards();
+        }
+
+        // Сброс статистики
+        function resetStats() {
+            const diff = difficulties[difficulty];
+
+            stats = {
+                moves: 0,
+                pairsFound: 0,
+                totalPairs: diff.pairs,
+                accuracy: 0,
+                score: 0,
+                hints: 3,
+                combo: 0,
+                maxCombo: 0,
+                wrongGuesses: 0
+            };
+
+            seconds = 0;
+            minutes = 0;
+            cards = [];
+            flippedCards = [];
+            matchedCards = [];
+
+            // Обновляем таймер
+            updateTimerDisplay();
+
+            // Скрываем сообщения
+            closeAllMessages();
+
+            // Блокируем кнопки
+            document.getElementById('hintButton').disabled = true;
+            document.getElementById('startButton').disabled = false;
+
+            gameActive = false;
+            gameStarted = false;
+
+            // Останавливаем таймер
+            clearInterval(timerInterval);
+        }
+
+        // Создание карточек
+        function createCards() {
+            const diff = difficulties[difficulty];
+            const pairsCount = diff.pairs;
+
+            // Темы для карточек (только 8 пар, как в ваших изображениях)
+            const cardThemes = [
+                { name: 'Ракета', pairId: 1, emoji: '🚀', imageA: 'memory1_a.png', imageB: 'memory1_b.png' },
+                { name: 'Космонавт', pairId: 2, emoji: '👨‍🚀', imageA: 'memory2_a.png', imageB: 'memory2_b.png' },
+                { name: 'Инопланетянин', pairId: 3, emoji: '👽', imageA: 'memory3_a.png', imageB: 'memory3_b.png' },
+                { name: 'Спутник', pairId: 4, emoji: '🛰️', imageA: 'memory4_a.png', imageB: 'memory4_b.png' },
+                { name: 'Звезда', pairId: 5, emoji: '⭐', imageA: 'memory5_a.png', imageB: 'memory5_b.png' },
+                { name: 'Планета', pairId: 6, emoji: '🪐', imageA: 'memory6_a.png', imageB: 'memory6_b.png' },
+                { name: 'Комета', pairId: 7, emoji: '☄️', imageA: 'memory7_a.png', imageB: 'memory7_b.png' },
+                { name: 'Трофей', pairId: 8, emoji: '🏆', imageA: 'memory8_a.png', imageB: 'memory8_b.png' }
+            ];
+
+            // Выбираем нужное количество пар (для easy - 6, medium - 8, hard - 8)
+            const selectedThemes = cardThemes.slice(0, pairsCount);
+
+            // Создаем все карточки
+            let allCards = [];
+
+            selectedThemes.forEach(theme => {
+                // Карточка A (левая/верхняя)
+                allCards.push({
+                    id: allCards.length,
+                    pairId: theme.pairId,
+                    name: theme.name,
+                    emoji: theme.emoji,
+                    image: theme.imageA,
+                    isA: true
+                });
+
+                // Карточка B (правая/нижняя)
+                allCards.push({
+                    id: allCards.length,
+                    pairId: theme.pairId,
+                    name: theme.name,
+                    emoji: theme.emoji,
+                    image: theme.imageB,
+                    isA: false
+                });
+            });
+
+            // Перемешиваем карточки
+            allCards = allCards.sort(() => Math.random() - 0.5);
+
+            // Создаем объекты карточек для игры
+            cards = allCards.map((cardInfo, index) => ({
+                id: index,
+                gameId: cardInfo.id,
+                pairId: cardInfo.pairId,
+                name: cardInfo.name,
+                emoji: cardInfo.emoji,
+                image: cardInfo.image,
+                isA: cardInfo.isA,
+                flipped: false,
+                matched: false,
+                element: null
+            }));
+
+            console.log('Создано карточек:', cards.length);
+            console.log('Карточки:', cards);
+        }
+
+        // Отрисовка карточек
+        function renderCards() {
+            const grid = document.getElementById('cardsGrid');
+            grid.innerHTML = '';
+
+            // Настраиваем сетку в зависимости от количества карточек и размера экрана
+            const pairsCount = difficulties[difficulty].pairs;
+            const totalCards = pairsCount * 2;
+            const screenWidth = window.innerWidth;
+
+            // Адаптивная логика
+            let columns;
+
+            if (screenWidth >= 1024) { // Большие экраны
+                if (totalCards <= 12) {
+                    columns = 4;
+                } else if (totalCards <= 16) {
+                    columns = 4;
+                } else {
+                    columns = 6;
+                }
+            } else if (screenWidth >= 768) { // Планшеты
+                if (totalCards <= 12) {
+                    columns = 3;
+                } else if (totalCards <= 16) {
+                    columns = 4;
+                } else {
+                    columns = 5;
+                }
+            } else { // Мобильные
+                if (totalCards <= 12) {
+                    columns = 2;
+                } else if (totalCards <= 16) {
+                    columns = 3;
+                } else {
+                    columns = 4;
+                }
+            }
+
+            // Устанавливаем размер карточек
+            const cardSize = Math.min(
+                150, // Максимальный размер
+                Math.max(80, 400 / columns - 20) // Минимальный размер
+            );
+
+            grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+            grid.style.gap = `${Math.min(15, cardSize * 0.1)}px`;
+
+            // Уменьшаем размер карточек для большого количества
+            const fontSizeMultiplier = totalCards > 16 ? 0.8 : 1;
+
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.dataset.index = index;
+                cardElement.style.minHeight = `${cardSize}px`; // Фиксируем высоту
+
+                cardElement.innerHTML = `
+                    <div class="card-back">
+                        <div style="
+                            width: 100%;
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: ${cardSize * 0.4}px;
+                            color: white;
+                            background: linear-gradient(45deg, #ff00ff, #00ffff);
+                            border-radius: 12px;
+                        ">
+                            <div>?</div>
+                        </div>
+                    </div>
+                    <div class="card-front">
+                        <div style="
+                            width: 100%;
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 10px;
+                            background: linear-gradient(135deg, #2a2a5a, #3a3a7a);
+                            border-radius: 12px;
+                        ">
+                            <!-- Пробуем загрузить изображение -->
+                            <img src="/static/game_images/memory/${card.image}"
+                                 alt="${card.name}"
+                                 style="
+                                     max-width: 90%;
+                                     max-height: 90%;
+                                     object-fit: contain;
+                                 "
+                                 onerror="
+                                     // Если изображение не загрузилось, показываем эмодзи
+                                     this.style.display='none';
+                                     const parent = this.parentElement;
+                                     const emojiDiv = document.createElement('div');
+                                     emojiDiv.style.cssText = 'font-size: ${cardSize * 0.5}px;';
+                                     emojiDiv.textContent = '${card.emoji}';
+                                     parent.appendChild(emojiDiv);
+                                 ">
+                        </div>
+                    </div>
+                    <div class="hint-overlay" id="hint-${index}"></div>
+                `;
+
+                // Добавляем обработчик клика
+                cardElement.addEventListener('click', () => flipCard(index));
+
+                grid.appendChild(cardElement);
+                card.element = cardElement;
+            });
+        }
+
+        // Переворот карточки
+        function flipCard(index) {
+            if (!gameActive || !gameStarted) return;
+
+            const card = cards[index];
+
+            // Проверяем, можно ли перевернуть карточку
+            if (card.flipped || card.matched || flippedCards.length >= 2) return;
+
+            // Переворачиваем карточку
+            card.flipped = true;
+            card.element.classList.add('flipped');
+            flippedCards.push(index);
+
+            // Воспроизводим звук
+            playSound('flip');
+
+            // Если перевернуто две карточки
+            if (flippedCards.length === 2) {
+                stats.moves++;
+                checkForMatch();
+            }
+
+            updateUI();
+        }
+
+        // Проверка совпадения
+        function checkForMatch() {
+            const [index1, index2] = flippedCards;
+            const card1 = cards[index1];
+            const card2 = cards[index2];
+
+            console.log('Проверка совпадения:');
+            console.log('Карточка 1:', card1);
+            console.log('Карточка 2:', card2);
+
+            // Карточки совпадают, если у них одинаковый pairId
+            // (т.е. это пара A и B одной и той же темы)
+            if (card1.pairId === card2.pairId) {
+                console.log('✅ Найдена пара! Тема:', card1.name);
+
+                // Успешное совпадение
+                card1.matched = true;
+                card2.matched = true;
+
+                // Анимация совпадения
+                card1.element.classList.add('matched');
+                card2.element.classList.add('matched');
+                card1.element.classList.add('card-match');
+                card2.element.classList.add('card-match');
+
+                // Обновляем статистику
+                stats.pairsFound++;
+                stats.combo++;
+                stats.maxCombo = Math.max(stats.maxCombo, stats.combo);
+
+                // Обновляем точность
+                stats.accuracy = Math.round((stats.pairsFound / stats.moves) * 100) || 0;
+
+                // Добавляем очки
+                const basePoints = 100;
+                const comboBonus = stats.combo * 10;
+                stats.score += basePoints + comboBonus;
+
+                // Показываем комбо
+                if (stats.combo > 1) {
+                    showCombo(stats.combo);
+                }
+
+                // Воспроизводим звук успеха
+                playSound('match');
+
+                // Проверяем победу
+                if (stats.pairsFound === stats.totalPairs) {
+                    setTimeout(() => {
+                        winGame();
+                    }, 500);
+                }
+
+                // Очищаем перевернутые карточки через секунду
+                setTimeout(() => {
+                    flippedCards = [];
+                }, 1000);
+
+            } else {
+                console.log('❌ Не пара!');
+
+                // Несовпадение
+                stats.combo = 0;
+                stats.wrongGuesses++;
+
+                // Анимация несовпадения
+                card1.element.classList.add('card-shake');
+                card2.element.classList.add('card-shake');
+
+                // Воспроизводим звук ошибки
+                playSound('error');
+
+                // Переворачиваем карточки обратно через 1.5 секунды
+                setTimeout(() => {
+                    card1.flipped = false;
+                    card2.flipped = false;
+                    card1.element.classList.remove('flipped', 'card-shake');
+                    card2.element.classList.remove('flipped', 'card-shake');
+                    flippedCards = [];
+                }, 1500);
+            }
+
+            updateUI();
+        }
+
+        // Начало игры
+        function startGame() {
+            if (gameStarted) return;
+
+            gameActive = true;
+            gameStarted = true;
+
+            // Запускаем таймер
+            startTimer();
+
+            // Блокируем кнопки
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('hintButton').disabled = false;
+
+            // Скрываем все сообщения
+            closeAllMessages();
+
+            console.log('Игра началась');
+        }
+
+        // Запуск таймера
+        function startTimer() {
+            seconds = 0;
+            minutes = 0;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                seconds++;
+                if (seconds === 60) {
+                    seconds = 0;
+                    minutes++;
+                }
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        // Обновление отображения таймера
+        function updateTimerDisplay() {
+            const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('timerDisplay').textContent = timeStr;
+        }
+
+        // Обновление UI
+        function updateUI() {
+            document.getElementById('movesValue').textContent = stats.moves;
+            document.getElementById('pairsValue').textContent = `${stats.pairsFound}/${stats.totalPairs}`;
+            document.getElementById('accuracyValue').textContent = `${stats.accuracy}%`;
+            document.getElementById('scoreValue').textContent = stats.score;
+            document.getElementById('hintCount').textContent = stats.hints;
+
+            // Обновляем бейдж уровня
+            const levelNames = {
+                easy: 'ЛЁГКИЙ',
+                medium: 'СРЕДНИЙ',
+                hard: 'СЛОЖНЫЙ'
+            };
+            document.getElementById('levelBadge').textContent = levelNames[difficulty];
+        }
+
+        // Использование подсказки
+        function useHint() {
+            if (!gameActive || stats.hints <= 0) return;
+
+            stats.hints--;
+
+            // Находим неперевернутые и несопоставленные карточки
+            const availableCards = cards.filter(card => !card.flipped && !card.matched);
+
+            if (availableCards.length >= 2) {
+                // Выбираем две случайные карточки
+                const randomCards = availableCards.sort(() => Math.random() - 0.5).slice(0, 2);
+
+                // Показываем подсказку
+                randomCards.forEach(card => {
+                    const hintOverlay = document.getElementById(`hint-${card.id}`);
+                    if (hintOverlay) {
+                        hintOverlay.style.display = 'block';
+
+                        // Скрываем подсказку через 2 секунды
+                        setTimeout(() => {
+                            hintOverlay.style.display = 'none';
+                        }, 2000);
+                    }
+                });
+
+                // Воспроизводим звук
+                playSound('hint');
+
+                // Показываем уведомление
+                showNotification('💡 Подсказка активирована!');
+            }
+
+            updateUI();
+        }
+
+        // Показ комбо
+        function showCombo(comboCount) {
+            const comboCounter = document.getElementById('comboCounter');
+            const comboText = document.getElementById('comboText');
+
+            comboText.textContent = `КОМБО x${comboCount}!`;
+            comboCounter.style.display = 'block';
+
+            // Скрываем через 2 секунды
+            setTimeout(() => {
+                comboCounter.style.display = 'none';
+            }, 2000);
+        }
+
+        // Победа в игре
+        async function winGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+
+            // Расчет награды
+            const totalTime = minutes * 60 + seconds;
+            const timeBonus = calculateTimeBonus(totalTime);
+            const accuracyBonus = calculateAccuracyBonus(stats.accuracy);
+            const comboBonus = calculateComboBonus(stats.maxCombo);
+            const baseStars = 4;
+
+            const totalStars = baseStars + timeBonus + accuracyBonus + comboBonus;
+
+            // Показываем сообщение о победе
+            document.getElementById('winStats').innerHTML = `
+                ⏱️ Время: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}<br>
+                📊 Ходов: ${stats.moves}<br>
+                🎯 Точность: ${stats.accuracy}%<br>
+                🧩 Комбо: x${stats.maxCombo}<br>
+                ⭐ Очки: ${stats.score}<br>
+                <br>
+                <span style="color: gold; font-size: 1.3rem;">
+                    🎁 Награда: +${totalStars} звёзд!<br>
+                    (${baseStars} + ${timeBonus} + ${accuracyBonus} + ${comboBonus})
+                </span>
+            `;
+            showMessage('winMessage');
+
+            // Проверяем рекорд
+            checkForRecord(totalTime, stats.moves);
+
+            // Начисляем звёзды
+            try {
+                const response = await fetch('/add_star', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        count: totalStars,
+                        reason: `Победил в игре "Космическая память" (${difficulty})`
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showNotification(`⭐ Получено ${totalStars} звёзд! Всего: ${data.stars}`);
+                }
+            } catch (error) {
+                console.log('Ошибка начисления звёзд:', error);
+            }
+
+            // Обновляем статистику в профиле
+            updateUserProfile();
+
+            // Воспроизводим звук победы
+            playSound('success');
+        }
+
+        // Расчет бонуса за время
+        function calculateTimeBonus(totalSeconds) {
+            const diff = difficulties[difficulty];
+            const maxTime = diff.timeBonus;
+
+            if (totalSeconds <= maxTime * 0.3) return 3; // Очень быстро
+            if (totalSeconds <= maxTime * 0.6) return 2; // Быстро
+            if (totalSeconds <= maxTime) return 1;       // В пределах времени
+            return 0;                                    // Медленно
+        }
+
+        // Расчет бонуса за точность
+        function calculateAccuracyBonus(accuracy) {
+            if (accuracy >= 90) return 3;
+            if (accuracy >= 75) return 2;
+            if (accuracy >= 60) return 1;
+            return 0;
+        }
+
+        // Расчет бонуса за комбо
+        function calculateComboBonus(maxCombo) {
+            const diff = difficulties[difficulty];
+            const targetCombo = diff.comboBonus;
+
+            if (maxCombo >= targetCombo) return 3;
+            if (maxCombo >= targetCombo * 0.7) return 2;
+            if (maxCombo >= targetCombo * 0.4) return 1;
+            return 0;
+        }
+
+        // Проверка рекорда
+        function checkForRecord(time, moves) {
+            const storageKey = `memory_record_${difficulty}`;
+            const currentRecord = localStorage.getItem(storageKey);
+
+            if (!currentRecord) {
+                // Первая игра на этом уровне
+                saveRecord(time, moves);
+                showRecordMessage(true, time, moves);
+            } else {
+                const record = JSON.parse(currentRecord);
+
+                // Сравниваем по времени и ходам
+                const currentScore = (1 / (time + 1)) * 1000 + (1 / (moves + 1)) * 100;
+                const recordScore = (1 / (record.time + 1)) * 1000 + (1 / (record.moves + 1)) * 100;
+
+                if (currentScore > recordScore) {
+                    // Новый рекорд!
+                    saveRecord(time, moves);
+                    showRecordMessage(false, time, moves, record);
+                }
+            }
+        }
+
+        // Сохранение рекорда
+        function saveRecord(time, moves) {
+            const storageKey = `memory_record_${difficulty}`;
+            const record = {
+                time: time,
+                moves: moves,
+                date: new Date().toISOString()
+            };
+            localStorage.setItem(storageKey, JSON.stringify(record));
+        }
+
+        // Показ сообщения о рекорде
+        function showRecordMessage(isFirst, time, moves, oldRecord = null) {
+            const timeStr = `${Math.floor(time / 60).toString().padStart(2, '0')}:${(time % 60).toString().padStart(2, '0')}`;
+
+            if (isFirst) {
+                document.getElementById('recordText').textContent = 'Ты установил первый рекорд!';
+                document.getElementById('recordStats').innerHTML = `
+                    ⏱️ Время: ${timeStr}<br>
+                    📊 Ходов: ${moves}
+                `;
+            } else {
+                const oldTimeStr = `${Math.floor(oldRecord.time / 60).toString().padStart(2, '0')}:${(oldRecord.time % 60).toString().padStart(2, '0')}`;
+                const timeImprovement = oldRecord.time - time;
+                const movesImprovement = oldRecord.moves - moves;
+
+                document.getElementById('recordText').textContent = 'Ты побил свой рекорд!';
+                document.getElementById('recordStats').innerHTML = `
+                    ⏱️ Время: ${timeStr} (было ${oldTimeStr})<br>
+                    📊 Ходов: ${moves} (было ${oldRecord.moves})<br>
+                    🎉 Улучшение: ${timeImprovement}сек и ${movesImprovement} ходов!
+                `;
+            }
+
+            // Показываем сообщение через 1.5 секунды после победы
+            setTimeout(() => {
+                showMessage('recordMessage');
+            }, 1500);
+        }
+
+        // Следующий уровень
+        function nextLevel() {
+            // Повышаем сложность если это возможно
+            if (difficulty === 'easy') {
+                setDifficulty('medium');
+            } else if (difficulty === 'medium') {
+                setDifficulty('hard');
+            }
+
+            resetGame();
+            startGame();
+        }
+
+        // Установка уровня сложности
+        function setDifficulty(level) {
+            difficulty = level;
+
+            // Обновляем активную кнопку
+            document.getElementById('easyBtn').classList.remove('active');
+            document.getElementById('mediumBtn').classList.remove('active');
+            document.getElementById('hardBtn').classList.remove('active');
+            document.getElementById(`${level}Btn`).classList.add('active');
+
+            // Сбрасываем игру
+            if (!gameStarted) {
+                setupGame();
+            }
+        }
+
+        // Перезапуск игры
+        function resetGame() {
+            clearInterval(timerInterval);
+            setupGame();
+        }
+
+        // Обновление статистики пользователя
+        async function updateUserProfile() {
+            try {
+                await fetch('/update_profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        games_played: 'increment'
+                    })
+                });
+            } catch (error) {
+                console.log('Ошибка обновления профиля:', error);
+            }
+        }
+
+        // Управление сообщениями
+        function showMessage(messageId) {
+            document.getElementById(messageId).style.display = 'block';
+        }
+
+        function closeMessage(messageId) {
+            document.getElementById(messageId).style.display = 'none';
+        }
+
+        function closeAllMessages() {
+            closeMessage('winMessage');
+            closeMessage('recordMessage');
+        }
+
+        // Звуки
+        function playSound(type) {
+            // В реальном проекте здесь были бы звуковые файлы
+            console.log('Воспроизведение звука:', type);
+        }
+
+        // Уведомления
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: rgba(0,0,0,0.9);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 15px;
+                border-left: 5px solid gold;
+                max-width: 300px;
+                z-index: 10000;
+                animation: slideIn 0.3s;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Создание звездного поля
+        function createStarfield() {
+            const starfield = document.querySelector('.starfield');
+            starfield.innerHTML = '';
+
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 3 + 1}px;
+                    height: ${Math.random() * 3 + 1}px;
+                    background: white;
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    animation: twinkle ${Math.random() * 3 + 2}s infinite;
+                    animation-delay: ${Math.random() * 3}s;
+                `;
+                starfield.appendChild(star);
+            }
+        }
+
+        // Добавляем CSS для анимаций
+        function addGameStyles() {
+            if (!document.getElementById('memory-game-styles')) {
+                const style = document.createElement('style');
+                style.id = 'memory-game-styles';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+
+                    @keyframes pulseHint {
+                        0%, 100% { opacity: 0.3; }
+                        50% { opacity: 0.7; }
+                    }
+
+                    @keyframes shake {
+                        0%, 100% { transform: rotateY(180deg) translateX(0); }
+                        25% { transform: rotateY(180deg) translateX(-10px); }
+                        75% { transform: rotateY(180deg) translateX(10px); }
+                    }
+
+                    @keyframes matchGlow {
+                        0%, 100% {
+                            box-shadow: 0 0 20px #00ff00;
+                            transform: rotateY(180deg) scale(1);
+                        }
+                        50% {
+                            box-shadow: 0 0 40px #00ff00;
+                            transform: rotateY(180deg) scale(1.1);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Страница игры "Космическая память" загружена');
+            addGameStyles();
+            initGame();
+        });
+    </script>
+
+</body>
+</html>

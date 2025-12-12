@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Лети на Луну</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-title {
+            color: #ffff00;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .game-instructions {
+            color: #aaa;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 20px;
+            line-height: 1.5;
+        }
+
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .game-wrapper {
+                flex-direction: row;
+            }
+        }
+
+        .game-area {
+            flex: 3;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            border: 4px solid #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .game-canvas {
+            background: linear-gradient(180deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%);
+            display: block;
+            width: 100%;
+            height: 500px;
+        }
+
+        .game-info {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            border: 3px solid #ff00ff;
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-title {
+            color: #00ffff;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            color: #ffff00;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .controls-section {
+            margin-top: 20px;
+        }
+
+        .controls-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .key {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #00ffaa;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-5px);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #00ff00, #00aa00);
+            color: white;
+        }
+
+        .pause-btn {
+            background: linear-gradient(45deg, #ffff00, #ffaa00);
+            color: black;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff4444, #aa0000);
+            color: white;
+        }
+
+        .back-btn {
+            background: linear-gradient(45deg, #4444ff, #0000aa);
+            color: white;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #ff0066, #ff5500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid gold;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            min-width: 300px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+        }
+
+        .message-title {
+            color: gold;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .message-text {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .message-stats {
+            color: #aaa;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .mobile-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid #00ffff;
+            color: white;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .mobile-btn:active {
+            background: rgba(0, 255, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+
+            .game-canvas {
+                height: 400px;
+            }
+
+            .game-wrapper {
+                flex-direction: column;
+            }
+        }
+
+        .fuel-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .fuel-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff5500, #ffff00);
+            border-radius: 5px;
+            width: 100%;
+            transition: width 0.3s;
+        }
+
+        .progress-bar {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .star-animation {
+            position: absolute;
+            pointer-events: none;
+            z-index: 10;
+            animation: collectStar 0.5s forwards;
+        }
+
+        @keyframes collectStar {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) translateY(-50px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="kid-mode">
+    <div class="starfield"></div>
+
+    <button class="back-button" onclick="window.location.href='/games'">
+        <i class="fas fa-arrow-left"></i> К играм
+    </button>
+
+    <div class="container">
+        <div class="game-container">
+            <div class="game-header">
+                <h1 class="game-title">🚀 ЛЕТИ НА ЛУНУ</h1>
+                <p class="game-instructions">
+                    Управляй ракетой с помощью клавиш WASD или стрелочек! Собирай звёзды, избегай метеоритов и долети до Луны!
+                </p>
+            </div>
+
+            <div class="game-wrapper">
+                <!-- Игровое поле -->
+                <div class="game-area">
+                    <canvas id="gameCanvas" class="game-canvas"></canvas>
+
+                    <!-- Сообщения игры -->
+                    <div class="game-message" id="startMessage">
+                        <div class="message-title">🚀 ЛЕТИ НА ЛУНУ</div>
+                        <div class="message-text">
+                            Собери звёзды, избегай метеоритов<br>и долети до Луны!
+                        </div>
+                        <button class="control-btn start-btn" onclick="startGame()" style="width: 100%;">
+                            <i class="fas fa-play"></i> НАЧАТЬ ИГРУ
+                        </button>
+                    </div>
+
+                    <div class="game-message" id="winMessage" style="display: none;">
+                        <div class="message-title">🎉 ПОБЕДА!</div>
+                        <div class="message-text">Ты добрался до Луны!</div>
+                        <div class="message-stats" id="winStats"></div>
+                        <button class="control-btn start-btn" onclick="restartGame()" style="width: 100%;">
+                            <i class="fas fa-redo"></i> ИГРАТЬ СНОВА
+                        </button>
+                    </div>
+
+                    <div class="game-message" id="loseMessage" style="display: none;">
+                        <div class="message-title">💥 ПРОИГРЫШ</div>
+                        <div class="message-text">Ракета разрушена!</div>
+                        <div class="message-stats" id="loseStats"></div>
+                        <button class="control-btn start-btn" onclick="restartGame()" style="width: 100%;">
+                            <i class="fas fa-redo"></i> ПОВТОРИТЬ
+                        </button>
+                    </div>
+
+                    <!-- Мобильное управление -->
+                    <div class="mobile-controls">
+                        <div class="mobile-btn" id="leftBtn">←</div>
+                        <div class="mobile-btn" id="upBtn">↑</div>
+                        <div class="mobile-btn" id="rightBtn">→</div>
+                    </div>
+                </div>
+
+                <!-- Информационная панель -->
+                <div class="game-info">
+                    <div class="info-section">
+                        <h2 class="info-title"><i class="fas fa-chart-bar"></i> СТАТИСТИКА</h2>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="scoreValue">0</div>
+                                <div class="stat-label">⭐ Звёзд собрано</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="distanceValue">0</div>
+                                <div class="stat-label">🌙 До Луны (км)</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="fuelValue">100</div>
+                                <div class="stat-label">⛽ Топливо (%)</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="speedValue">0</div>
+                                <div class="stat-label">🚀 Скорость (км/ч)</div>
+                            </div>
+                        </div>
+
+                        <!-- Прогресс до Луны -->
+                        <div style="margin-top: 20px;">
+                            <div style="display: flex; justify-content: space-between; color: #aaa; margin-bottom: 5px;">
+                                <span>🚀 Земля</span>
+                                <span id="progressText">0%</span>
+                                <span>🌙 Луна</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h2 class="info-title"><i class="fas fa-gamepad"></i> УПРАВЛЕНИЕ</h2>
+                        <div class="controls-info">
+                            <span class="key">W</span> / <span class="key">↑</span> - Вверх
+                        </div>
+                        <div class="controls-info">
+                            <span class="key">A</span> / <span class="key">←</span> - Влево
+                        </div>
+                        <div class="controls-info">
+                            <span class="key">S</span> / <span class="key">↓</span> - Вниз
+                        </div>
+                        <div class="controls-info">
+                            <span class="key">D</span> / <span class="key">→</span> - Вправо
+                        </div>
+                        <div class="controls-info">
+                            <span class="key">ПРОБЕЛ</span> - Ускориться
+                        </div>
+                    </div>
+
+                    <!-- Полоска топлива -->
+                    <div style="margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; color: #aaa; margin-bottom: 5px;">
+                            <span>⛽ Топливо</span>
+                            <span id="fuelText">100%</span>
+                        </div>
+                        <div class="fuel-bar">
+                            <div class="fuel-fill" id="fuelFill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки управления -->
+            <div class="game-controls">
+                <button class="control-btn start-btn" onclick="startGame()" id="startButton">
+                    <i class="fas fa-play"></i> Начать игру
+                </button>
+                <button class="control-btn pause-btn" onclick="togglePause()" id="pauseButton" disabled>
+                    <i class="fas fa-pause"></i> Пауза
+                </button>
+                <button class="control-btn reset-btn" onclick="restartGame()">
+                    <i class="fas fa-redo"></i> Заново
+                </button>
+                <button class="control-btn back-btn" onclick="window.location.href='/games'">
+                    <i class="fas fa-gamepad"></i> Другие игры
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Игровые переменные
+        let canvas, ctx;
+        let gameRunning = false;
+        let gamePaused = false;
+        let gameLoop;
+        let lastTime = 0;
+
+        // Статистика игры
+        let stats = {
+            score: 0,
+            distance: 0,
+            fuel: 100,
+            speed: 0,
+            maxDistance: 384400, // Расстояние до Луны в км
+            progress: 0,
+            starsCollected: 0,
+            obstaclesAvoided: 0
+        };
+
+        // Объекты игры
+        let rocket = {
+            x: 400,
+            y: 300,
+            width: 40,
+            height: 60,
+            velocityX: 0,
+            velocityY: 0,
+            rotation: 0,
+            thrust: false,
+            color: '#ff5500'
+        };
+
+        let stars = [];
+        let obstacles = [];
+        let particles = [];
+        let moon = {
+            x: 0,
+            y: 0,
+            radius: 60,
+            color: '#cccccc'
+        };
+
+        // Инициализация игры
+        function initGame() {
+            console.log('Инициализация игры "Лети на Луну"');
+
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Устанавливаем размеры canvas
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            // Позиционируем Луну в конце пути
+            moon.x = canvas.width - moon.radius - 50;
+            moon.y = canvas.height / 2;
+
+            // Сбрасываем статистику
+            resetStats();
+
+            // Создаем звездное поле в игре
+            createStars();
+            createObstacles();
+
+            // Настраиваем управление
+            setupControls();
+
+            // Создаем звездное поле фона
+            createStarfield();
+
+            // Показываем стартовое сообщение
+            showMessage('startMessage');
+
+            console.log('Игра инициализирована');
+        }
+
+        // Сброс статистики
+        function resetStats() {
+            stats = {
+                score: 0,
+                distance: 0,
+                fuel: 100,
+                speed: 0,
+                maxDistance: 384400,
+                progress: 0,
+                starsCollected: 0,
+                obstaclesAvoided: 0
+            };
+
+            rocket = {
+                x: canvas ? canvas.width / 2 : 400,
+                y: canvas ? canvas.height - 100 : 300,
+                width: 40,
+                height: 60,
+                velocityX: 0,
+                velocityY: 0,
+                rotation: 0,
+                thrust: false,
+                color: '#ff5500'
+            };
+
+            stars = [];
+            obstacles = [];
+            particles = [];
+
+            updateUI();
+        }
+
+        // Создание звёзд для сбора
+        function createStars() {
+            stars = [];
+            const starCount = 15;
+
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * (canvas.width - 100) + 50,
+                    y: Math.random() * (canvas.height - 200) + 50,
+                    radius: 15,
+                    color: '#ffff00',
+                    collected: false,
+                    pulse: 0,
+                    pulseSpeed: Math.random() * 0.05 + 0.02
+                });
+            }
+        }
+
+        // Создание препятствий (метеоритов)
+        function createObstacles() {
+            obstacles = [];
+            const obstacleCount = 10;
+
+            for (let i = 0; i < obstacleCount; i++) {
+                obstacles.push({
+                    x: Math.random() * (canvas.width - 100) + 50,
+                    y: Math.random() * (canvas.height - 200) + 50,
+                    radius: Math.random() * 20 + 15,
+                    color: '#ff4444',
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: Math.random() * 0.02 - 0.01
+                });
+            }
+        }
+
+        // Настройка управления
+        function setupControls() {
+            // Клавиатура
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+
+            // Мобильное управление
+            const leftBtn = document.getElementById('leftBtn');
+            const upBtn = document.getElementById('upBtn');
+            const rightBtn = document.getElementById('rightBtn');
+
+            if (leftBtn) {
+                leftBtn.addEventListener('touchstart', () => handleMobileKey('left', true));
+                leftBtn.addEventListener('touchend', () => handleMobileKey('left', false));
+                leftBtn.addEventListener('mousedown', () => handleMobileKey('left', true));
+                leftBtn.addEventListener('mouseup', () => handleMobileKey('left', false));
+                leftBtn.addEventListener('mouseleave', () => handleMobileKey('left', false));
+            }
+
+            if (upBtn) {
+                upBtn.addEventListener('touchstart', () => handleMobileKey('up', true));
+                upBtn.addEventListener('touchend', () => handleMobileKey('up', false));
+                upBtn.addEventListener('mousedown', () => handleMobileKey('up', true));
+                upBtn.addEventListener('mouseup', () => handleMobileKey('up', false));
+                upBtn.addEventListener('mouseleave', () => handleMobileKey('up', false));
+            }
+
+            if (rightBtn) {
+                rightBtn.addEventListener('touchstart', () => handleMobileKey('right', true));
+                rightBtn.addEventListener('touchend', () => handleMobileKey('right', false));
+                rightBtn.addEventListener('mousedown', () => handleMobileKey('right', true));
+                rightBtn.addEventListener('mouseup', () => handleMobileKey('right', false));
+                rightBtn.addEventListener('mouseleave', () => handleMobileKey('right', false));
+            }
+
+            // Предотвращаем прокрутку при касании кнопок
+            document.querySelectorAll('.mobile-btn').forEach(btn => {
+                btn.addEventListener('touchstart', (e) => e.preventDefault());
+            });
+        }
+
+        // Обработка клавиатуры
+        const keys = {};
+
+        function handleKeyDown(e) {
+            if (!gameRunning || gamePaused) return;
+
+            keys[e.key.toLowerCase()] = true;
+            keys[e.code] = true;
+
+            // Пробел для ускорения
+            if (e.code === 'Space') {
+                rocket.thrust = true;
+                if (stats.fuel > 0) {
+                    stats.speed += 2;
+                    stats.fuel -= 0.2;
+                }
+            }
+        }
+
+        function handleKeyUp(e) {
+            keys[e.key.toLowerCase()] = false;
+            keys[e.code] = false;
+
+            if (e.code === 'Space') {
+                rocket.thrust = false;
+            }
+        }
+
+        // Обработка мобильного управления
+        function handleMobileKey(direction, pressed) {
+            if (!gameRunning || gamePaused) return;
+
+            switch(direction) {
+                case 'left':
+                    keys['arrowleft'] = pressed;
+                    keys['a'] = pressed;
+                    break;
+                case 'right':
+                    keys['arrowright'] = pressed;
+                    keys['d'] = pressed;
+                    break;
+                case 'up':
+                    keys['arrowup'] = pressed;
+                    keys['w'] = pressed;
+                    break;
+            }
+        }
+
+        // Главный игровой цикл
+        function gameUpdate(currentTime) {
+            if (!gameRunning || gamePaused) return;
+
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            // Обновление физики
+            updatePhysics(deltaTime);
+
+            // Проверка столкновений
+            checkCollisions();
+
+            // Обновление анимаций
+            updateAnimations(deltaTime);
+
+            // Отрисовка
+            draw();
+
+            // Обновление UI
+            updateUI();
+
+            // Продолжаем цикл
+            gameLoop = requestAnimationFrame(gameUpdate);
+        }
+
+        // Обновление физики
+        function updatePhysics(deltaTime) {
+            const dt = deltaTime / 16; // Нормализация времени
+
+            // Управление ракетой
+            rocket.velocityX = 0;
+            rocket.velocityY = 0;
+
+            if (keys['arrowleft'] || keys['a']) {
+                rocket.velocityX = -5 * dt;
+                rocket.rotation = -0.2;
+            }
+            if (keys['arrowright'] || keys['d']) {
+                rocket.velocityX = 5 * dt;
+                rocket.rotation = 0.2;
+            }
+            if (keys['arrowup'] || keys['w']) {
+                rocket.velocityY = -5 * dt;
+                if (stats.fuel > 0) {
+                    stats.speed += 0.1 * dt;
+                    stats.fuel -= 0.1 * dt;
+                }
+            }
+            if (keys['arrowdown'] || keys['s']) {
+                rocket.velocityY = 5 * dt;
+                rocket.rotation = 0;
+            }
+
+            // Если не нажаты клавиши, возвращаем вращение
+            if (!keys['arrowleft'] && !keys['arrowright'] && !keys['a'] && !keys['d']) {
+                rocket.rotation *= 0.9;
+            }
+
+            // Движение ракеты
+            rocket.x += rocket.velocityX;
+            rocket.y += rocket.velocityY;
+
+            // Границы экрана
+            rocket.x = Math.max(rocket.width / 2, Math.min(canvas.width - rocket.width / 2, rocket.x));
+            rocket.y = Math.max(rocket.height / 2, Math.min(canvas.height - rocket.height / 2, rocket.y));
+
+            // Уменьшение скорости
+            stats.speed *= 0.99;
+
+            // Увеличение дистанции
+            stats.distance += stats.speed * dt;
+            stats.progress = Math.min(100, (stats.distance / stats.maxDistance) * 100);
+
+            // Уменьшение топлива
+            if (stats.fuel > 0 && (rocket.thrust || keys['arrowup'] || keys['w'])) {
+                stats.fuel = Math.max(0, stats.fuel - 0.1 * dt);
+            }
+
+            // Если топливо закончилось
+            if (stats.fuel <= 0) {
+                stats.speed *= 0.95;
+            }
+
+            // Пульсация звёзд
+            stars.forEach(star => {
+                if (!star.collected) {
+                    star.pulse += star.pulseSpeed * dt;
+                }
+            });
+
+            // Вращение препятствий
+            obstacles.forEach(obstacle => {
+                obstacle.rotation += obstacle.rotationSpeed * dt;
+            });
+
+            // Обновление частиц
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].x += particles[i].velocityX;
+                particles[i].y += particles[i].velocityY;
+                particles[i].life -= 0.02 * dt;
+
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Создание частиц выхлопа
+            if (rocket.thrust && stats.fuel > 0 && gameRunning) {
+                createExhaustParticles();
+            }
+        }
+
+        // Проверка столкновений
+        function checkCollisions() {
+            // Проверка сбора звёзд
+            stars.forEach(star => {
+                if (!star.collected) {
+                    const dx = rocket.x - star.x;
+                    const dy = rocket.y - star.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < rocket.width / 2 + star.radius) {
+                        star.collected = true;
+                        stats.score += 10;
+                        stats.starsCollected++;
+
+                        // Анимация сбора
+                        createStarCollectionAnimation(star.x, star.y);
+
+                        // Звук сбора
+                        playSound('star');
+
+                        // Обновление топлива за сбор звезды
+                        stats.fuel = Math.min(100, stats.fuel + 5);
+                    }
+                }
+            });
+
+            // Проверка столкновений с препятствиями
+            obstacles.forEach(obstacle => {
+                const dx = rocket.x - obstacle.x;
+                const dy = rocket.y - obstacle.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < rocket.width / 2 + obstacle.radius) {
+                    // Столкновение!
+                    gameOver();
+                }
+            });
+
+            // Проверка достижения Луны
+            const dx = rocket.x - moon.x;
+            const dy = rocket.y - moon.y;
+            const distanceToMoon = Math.sqrt(dx * dx + dy * dy);
+
+            if (distanceToMoon < rocket.width / 2 + moon.radius) {
+                winGame();
+            }
+
+            // Проверка конца топлива в космосе
+            if (stats.fuel <= 0 && stats.distance < stats.maxDistance * 0.8) {
+                // Если топливо закончилось рано
+                stats.speed = 0;
+            }
+        }
+
+        // Создание анимации сбора звезды
+        function createStarCollectionAnimation(x, y) {
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    velocityX: (Math.random() - 0.5) * 4,
+                    velocityY: (Math.random() - 0.5) * 4,
+                    radius: Math.random() * 3 + 1,
+                    color: '#ffff00',
+                    life: 1
+                });
+            }
+
+            // Добавляем элемент для CSS анимации
+            const starAnim = document.createElement('div');
+            starAnim.className = 'star-animation';
+            starAnim.innerHTML = '⭐';
+            starAnim.style.cssText = `
+                position: absolute;
+                left: ${x}px;
+                top: ${y}px;
+                font-size: 2rem;
+            `;
+            document.querySelector('.game-area').appendChild(starAnim);
+
+            setTimeout(() => {
+                starAnim.remove();
+            }, 500);
+        }
+
+        // Создание частиц выхлопа
+        function createExhaustParticles() {
+            const angle = rocket.rotation;
+            const exhaustX = rocket.x - Math.sin(angle) * rocket.height / 2;
+            const exhaustY = rocket.y + Math.cos(angle) * rocket.height / 2;
+
+            for (let i = 0; i < 3; i++) {
+                particles.push({
+                    x: exhaustX,
+                    y: exhaustY,
+                    velocityX: (Math.random() - 0.5) * 2 - Math.sin(angle) * 2,
+                    velocityY: (Math.random() - 0.5) * 2 + Math.cos(angle) * 2,
+                    radius: Math.random() * 3 + 2,
+                    color: '#ff5500',
+                    life: 0.5
+                });
+            }
+        }
+
+        // Обновление анимаций
+        function updateAnimations(deltaTime) {
+            // Здесь можно добавить дополнительные анимации
+        }
+
+        // Отрисовка игры
+        function draw() {
+            // Очистка canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Фон
+            drawBackground();
+
+            // Луна
+            drawMoon();
+
+            // Звёзды
+            drawStars();
+
+            // Препятствия
+            drawObstacles();
+
+            // Частицы
+            drawParticles();
+
+            // Ракета
+            drawRocket();
+
+            // Оверлей прогресса
+            drawOverlay();
+        }
+
+        // Отрисовка фона
+        function drawBackground() {
+            // Градиентный фон
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#0a0a2a');
+            gradient.addColorStop(0.5, '#1a1a4a');
+            gradient.addColorStop(1, '#0a0a2a');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Далекие звезды
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            for (let i = 0; i < 50; i++) {
+                const x = (i * 37) % canvas.width;
+                const y = (i * 23) % canvas.height;
+                const size = Math.sin(Date.now() * 0.001 + i) * 1 + 1;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Отрисовка Луны
+        function drawMoon() {
+            // Тень Луны
+            ctx.beginPath();
+            ctx.arc(moon.x, moon.y, moon.radius + 5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.fill();
+
+            // Луна
+            ctx.beginPath();
+            ctx.arc(moon.x, moon.y, moon.radius, 0, Math.PI * 2);
+
+            // Градиент для Луны
+            const moonGradient = ctx.createRadialGradient(
+                moon.x - 20, moon.y - 20, 10,
+                moon.x, moon.y, moon.radius
+            );
+            moonGradient.addColorStop(0, '#ffffff');
+            moonGradient.addColorStop(1, '#aaaaaa');
+            ctx.fillStyle = moonGradient;
+            ctx.fill();
+
+            // Кратеры на Луне
+            ctx.fillStyle = '#888888';
+            ctx.beginPath();
+            ctx.arc(moon.x - 20, moon.y - 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(moon.x + 15, moon.y + 10, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(moon.x + 5, moon.y + 25, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Текст "ЛУНА"
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🌙 ЛУНА', moon.x, moon.y + moon.radius + 25);
+        }
+
+        // Отрисовка звёзд
+        function drawStars() {
+            stars.forEach(star => {
+                if (!star.collected) {
+                    // Пульсация
+                    const pulseRadius = star.radius + Math.sin(star.pulse) * 3;
+
+                    // Градиент для звезды
+                    const gradient = ctx.createRadialGradient(
+                        star.x, star.y, 0,
+                        star.x, star.y, pulseRadius
+                    );
+                    gradient.addColorStop(0, '#ffff00');
+                    gradient.addColorStop(1, '#ffaa00');
+
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, pulseRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+
+                    // Блеск
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, pulseRadius * 0.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+
+                    // Эмодзи звезды поверх
+                    ctx.font = 'bold 20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('⭐', star.x, star.y);
+                }
+            });
+        }
+
+        // Отрисовка препятствий
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                ctx.save();
+                ctx.translate(obstacle.x, obstacle.y);
+                ctx.rotate(obstacle.rotation);
+
+                // Метеорит
+                ctx.beginPath();
+                ctx.arc(0, 0, obstacle.radius, 0, Math.PI * 2);
+
+                const gradient = ctx.createRadialGradient(
+                    -10, -10, 5,
+                    0, 0, obstacle.radius
+                );
+                gradient.addColorStop(0, '#ff6666');
+                gradient.addColorStop(1, '#aa0000');
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Детали метеорита
+                ctx.fillStyle = '#884444';
+                ctx.beginPath();
+                ctx.arc(-5, -5, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(8, 5, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 10, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Эмодзи метеорита
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText('☄️', 0, 0);
+
+                ctx.restore();
+            });
+        }
+
+        // Отрисовка частиц
+        function drawParticles() {
+            particles.forEach(particle => {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.life;
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        // Отрисовка ракеты
+        function drawRocket() {
+            ctx.save();
+            ctx.translate(rocket.x, rocket.y);
+            ctx.rotate(rocket.rotation);
+
+            // Корпус ракеты
+            ctx.fillStyle = rocket.color;
+            ctx.fillRect(-rocket.width / 2, -rocket.height / 2, rocket.width, rocket.height);
+
+            // Нос ракеты
+            ctx.beginPath();
+            ctx.moveTo(-rocket.width / 2, -rocket.height / 2);
+            ctx.lineTo(rocket.width / 2, -rocket.height / 2);
+            ctx.lineTo(0, -rocket.height / 2 - 20);
+            ctx.closePath();
+            ctx.fillStyle = '#ff8800';
+            ctx.fill();
+
+            // Окна
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Крылья
+            ctx.fillStyle = '#ff3300';
+            ctx.fillRect(-rocket.width / 2 - 5, rocket.height / 2 - 20, 10, 20);
+            ctx.fillRect(rocket.width / 2 - 5, rocket.height / 2 - 20, 10, 20);
+
+            // Двигатель (если есть тяга)
+            if (rocket.thrust && stats.fuel > 0) {
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.moveTo(-10, rocket.height / 2);
+                ctx.lineTo(10, rocket.height / 2);
+                ctx.lineTo(0, rocket.height / 2 + 30);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Эмодзи ракеты поверх
+            ctx.font = 'bold 30px Arial';
+            ctx.fillText('🚀', 0, 0);
+
+            ctx.restore();
+        }
+
+        // Отрисовка оверлея
+        function drawOverlay() {
+            // Здесь можно добавить элементы HUD поверх игры
+        }
+
+        // Обновление UI
+        function updateUI() {
+            document.getElementById('scoreValue').textContent = stats.score;
+            document.getElementById('distanceValue').textContent = Math.floor(stats.distance);
+            document.getElementById('fuelValue').textContent = Math.floor(stats.fuel);
+            document.getElementById('speedValue').textContent = Math.floor(stats.speed * 1000);
+            document.getElementById('progressText').textContent = Math.floor(stats.progress) + '%';
+            document.getElementById('fuelText').textContent = Math.floor(stats.fuel) + '%';
+
+            // Обновление прогресс-бара
+            document.getElementById('progressFill').style.width = stats.progress + '%';
+
+            // Обновление полоски топлива
+            document.getElementById('fuelFill').style.width = stats.fuel + '%';
+
+            // Изменение цвета топлива
+            const fuelFill = document.getElementById('fuelFill');
+            if (stats.fuel > 50) {
+                fuelFill.style.background = 'linear-gradient(90deg, #ff5500, #ffff00)';
+            } else if (stats.fuel > 20) {
+                fuelFill.style.background = 'linear-gradient(90deg, #ffaa00, #ffff00)';
+            } else {
+                fuelFill.style.background = 'linear-gradient(90deg, #ff0000, #ffaa00)';
+            }
+        }
+
+        // Начало игры
+        function startGame() {
+            if (gameRunning) return;
+
+            gameRunning = true;
+            gamePaused = false;
+            lastTime = performance.now();
+
+            hideAllMessages();
+
+            // Активируем кнопку паузы
+            document.getElementById('pauseButton').disabled = false;
+            document.getElementById('startButton').disabled = true;
+
+            // Запускаем игровой цикл
+            gameLoop = requestAnimationFrame(gameUpdate);
+
+            console.log('Игра началась');
+        }
+
+        // Пауза/продолжение
+        function togglePause() {
+            if (!gameRunning) return;
+
+            gamePaused = !gamePaused;
+
+            const pauseButton = document.getElementById('pauseButton');
+            if (gamePaused) {
+                pauseButton.innerHTML = '<i class="fas fa-play"></i> Продолжить';
+                showNotification('⏸️ Игра на паузе');
+            } else {
+                pauseButton.innerHTML = '<i class="fas fa-pause"></i> Пауза';
+                lastTime = performance.now();
+                gameLoop = requestAnimationFrame(gameUpdate);
+                showNotification('▶️ Игра продолжается');
+            }
+        }
+
+        // Перезапуск игры
+        function restartGame() {
+            cancelAnimationFrame(gameLoop);
+            gameRunning = false;
+            gamePaused = false;
+
+            resetStats();
+            createStars();
+            createObstacles();
+
+            document.getElementById('pauseButton').disabled = true;
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('pauseButton').innerHTML = '<i class="fas fa-pause"></i> Пауза';
+
+            showMessage('startMessage');
+
+            console.log('Игра перезапущена');
+        }
+
+        // Победа в игре
+        async function winGame() {
+            if (!gameRunning) return;
+
+            gameRunning = false;
+            cancelAnimationFrame(gameLoop);
+
+            // Расчет награды
+            const baseStars = 10;
+            const speedBonus = Math.floor(stats.speed * 2);
+            const starBonus = stats.starsCollected * 5;
+            const fuelBonus = Math.floor(stats.fuel / 10);
+            const totalStars = baseStars + speedBonus + starBonus + fuelBonus;
+
+            // Показываем сообщение о победе
+            document.getElementById('winStats').innerHTML = `
+                ⭐ Собрано звёзд: ${stats.starsCollected}<br>
+                🚀 Макс. скорость: ${Math.floor(stats.speed * 1000)} км/ч<br>
+                ⛽ Осталось топлива: ${Math.floor(stats.fuel)}%<br>
+                🎯 Общий счёт: ${stats.score}<br>
+                <br>
+                <span style="color: gold; font-size: 1.3rem;">
+                    🎁 Награда: +${totalStars} звёзд!
+                </span>
+            `;
+            showMessage('winMessage');
+
+            // Начисляем звёзды
+            try {
+                const response = await fetch('/add_star', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        count: totalStars,
+                        reason: 'Долетел до Луны в игре'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showNotification(`⭐ Получено ${totalStars} звёзд! Всего: ${data.stars}`);
+                }
+            } catch (error) {
+                console.log('Ошибка начисления звёзд:', error);
+            }
+
+            // Обновляем статистику в профиле
+            updateUserProfile();
+
+            // Воспроизводим звук победы
+            playSound('success');
+        }
+
+        // Проигрыш
+        async function gameOver() {
+            if (!gameRunning) return;
+
+            gameRunning = false;
+            cancelAnimationFrame(gameLoop);
+
+            // Взрыв ракеты
+            createExplosion();
+
+            // Показываем сообщение о проигрыше
+            document.getElementById('loseStats').innerHTML = `
+                ⭐ Собрано звёзд: ${stats.starsCollected}<br>
+                🌙 Пройдено: ${Math.floor(stats.progress)}% пути<br>
+                🚀 Макс. скорость: ${Math.floor(stats.speed * 1000)} км/ч<br>
+                🎯 Общий счёт: ${stats.score}<br>
+                <br>
+                <span style="color: #ff4444;">
+                    💥 Столкновение с метеоритом!
+                </span>
+            `;
+            showMessage('loseMessage');
+
+            // Начисляем звёзды за собранные звезды
+            if (stats.starsCollected > 0) {
+                const starReward = stats.starsCollected;
+                try {
+                    const response = await fetch('/add_star', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            count: starReward,
+                            reason: 'Собрал звёзды в игре "Лети на Луну"'
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        showNotification(`⭐ Получено ${starReward} звёзд за собранные звезды!`);
+                    }
+                } catch (error) {
+                    console.log('Ошибка начисления звёзд:', error);
+                }
+            }
+
+            // Воспроизводим звук взрыва
+            playSound('error');
+        }
+
+        // Создание взрыва
+        function createExplosion() {
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: rocket.x,
+                    y: rocket.y,
+                    velocityX: (Math.random() - 0.5) * 10,
+                    velocityY: (Math.random() - 0.5) * 10,
+                    radius: Math.random() * 4 + 2,
+                    color: ['#ff0000', '#ff5500', '#ffff00'][Math.floor(Math.random() * 3)],
+                    life: 1
+                });
+            }
+
+            // Отрисовываем последний кадр с взрывом
+            draw();
+        }
+
+        // Обновление статистики пользователя
+        async function updateUserProfile() {
+            try {
+                await fetch('/update_profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        games_played: 'increment'
+                    })
+                });
+            } catch (error) {
+                console.log('Ошибка обновления профиля:', error);
+            }
+        }
+
+        // Управление сообщениями
+        function showMessage(messageId) {
+            hideAllMessages();
+            document.getElementById(messageId).style.display = 'block';
+        }
+
+        function hideAllMessages() {
+            document.getElementById('startMessage').style.display = 'none';
+            document.getElementById('winMessage').style.display = 'none';
+            document.getElementById('loseMessage').style.display = 'none';
+        }
+
+        // Звуки
+        function playSound(type) {
+            // В реальном проекте здесь были бы звуковые файлы
+            console.log('Воспроизведение звука:', type);
+        }
+
+        // Уведомления
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: rgba(0,0,0,0.9);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 15px;
+                border-left: 5px solid gold;
+                max-width: 300px;
+                z-index: 10000;
+                animation: slideIn 0.3s;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Создание звездного поля
+        function createStarfield() {
+            const starfield = document.querySelector('.starfield');
+            starfield.innerHTML = '';
+
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 3 + 1}px;
+                    height: ${Math.random() * 3 + 1}px;
+                    background: white;
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    animation: twinkle ${Math.random() * 3 + 2}s infinite;
+                    animation-delay: ${Math.random() * 3}s;
+                `;
+                starfield.appendChild(star);
+            }
+        }
+
+        // Добавляем CSS для анимаций
+        function addGameStyles() {
+            if (!document.getElementById('fly-game-styles')) {
+                const style = document.createElement('style');
+                style.id = 'fly-game-styles';
+                style.textContent = `
+                    @keyframes collectStar {
+                        0% {
+                            transform: scale(1) translateY(0);
+                            opacity: 1;
+                        }
+                        100% {
+                            transform: scale(0) translateY(-50px);
+                            opacity: 0;
+                        }
+                    }
+
+                    @keyframes slideIn {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.7; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Обработка изменения размера окна
+        function handleResize() {
+            if (canvas) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+
+                // Перемещаем Луну
+                moon.x = canvas.width - moon.radius - 50;
+                moon.y = canvas.height / 2;
+
+                // Перерисовываем, если игра не запущена
+                if (!gameRunning) {
+                    draw();
+                }
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Страница игры "Лети на Луну" загружена');
+            addGameStyles();
+            initGame();
+
+            // Обработка изменения размера окна
+            window.addEventListener('resize', handleResize);
+        });
+    </script>
+
+</body>
+</html>

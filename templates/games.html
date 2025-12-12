@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Космические игры</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .games-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .game-card {
+            background: linear-gradient(135deg, #2a2a5a, #3a3a7a);
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card:hover {
+            transform: translateY(-15px);
+            border-color: #ff00ff;
+            box-shadow: 0 20px 40px rgba(255, 0, 255, 0.4);
+        }
+
+        .game-emoji {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .game-title {
+            font-size: 2rem;
+            color: #00ffff;
+            margin-bottom: 15px;
+        }
+
+        .game-description {
+            color: #cccccc;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .game-reward {
+            background: linear-gradient(45deg, gold, orange);
+            color: black;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #ff0066, #ff5500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-highlight {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff0000;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            animation: blink 1s infinite;
+        }
+    </style>
+</head>
+<body class="kid-mode">
+    <div class="starfield"></div>
+
+    <button class="back-button" onclick="window.location.href='/'">
+        <i class="fas fa-arrow-left"></i> На главную
+    </button>
+
+    <div class="container">
+        <header class="header" style="margin-top: 60px;">
+            <h1 class="main-title">🎮 КОСМИЧЕСКИЕ ИГРЫ</h1>
+            <p class="subtitle">Играй и зарабатывай звёзды! 🌟</p>
+        </header>
+
+        <div class="games-container">
+            <div class="games-grid">
+                <!-- Игра 1: Собери ракету -->
+                <div class="game-card" onclick="startGame('build')">
+                    <div class="game-highlight">НОВИНКА!</div>
+                    <div class="game-emoji">🧩</div>
+                    <div class="game-title">Собери ракету</div>
+                    <div class="game-description">
+                        Перетаскивай детали на нужные места! Собери ракету правильно и получи награду!
+                    </div>
+                    <div class="game-reward">⭐ +5 звёзд за победу</div>
+                </div>
+
+                <!-- Игра 2: Летающая ракета -->
+                <div class="game-card" onclick="startGame('fly')">
+                    <div class="game-emoji">🚀</div>
+                    <div class="game-title">Лети на Луну</div>
+                    <div class="game-description">
+                        Управляй ракетой и собирай звёзды! Избегай метеоритов и долети до Луны!
+                    </div>
+                    <div class="game-reward">⭐ +1 звезда за каждую собранную</div>
+                </div>
+
+                <!-- Игра 3: Космические пазлы -->
+                <div class="game-card" onclick="startGame('puzzle')">
+                    <div class="game-emoji">🪐</div>
+                    <div class="game-title">Планеты-пазлы</div>
+                    <div class="game-description">
+                        Собери картинку из кусочков! Узнай, как выглядят разные планеты и звёзды!
+                    </div>
+                    <div class="game-reward">⭐ +3 звезды за пазл</div>
+                </div>
+
+                <!-- Игра 4: Ракетная математика -->
+                <div class="game-card" onclick="startGame('math')">
+                    <div class="game-emoji">🔢</div>
+                    <div class="game-title">Космический счёт</div>
+                    <div class="game-description">
+                        Решай космические примеры! Помоги ракете заправиться, решив все задачи!
+                    </div>
+                    <div class="game-reward">⭐ +2 звезды за уровень</div>
+                </div>
+
+                <!-- Игра 5: Мемори-космос -->
+                <div class="game-card" onclick="startGame('memory')">
+                    <div class="game-emoji">🧠</div>
+                    <div class="game-title">Космическая память</div>
+                    <div class="game-description">
+                        Найди пары одинаковых карточек! Запомни, где какие космические объекты!
+                    </div>
+                    <div class="game-reward">⭐ +4 звезды за игру</div>
+                </div>
+
+                <!-- Игра 6: Раскраска -->
+                <div class="game-card" onclick="window.location.href='/coloring_gallery'">
+                    <div class="game-emoji">🎨</div>
+                    <div class="game-title">Космические раскраски</div>
+                    <div class="game-description">
+                        25+ картинок для раскрашивания! Пришельцы, ракеты, планеты и звёзды!
+                    </div>
+                    <div class="game-reward">⭐ +3 звезды за рисунок</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function startGame(gameType) {
+            console.log('Запуск игры:', gameType);
+
+            switch(gameType) {
+                case 'build':
+                    window.location.href = '/build_rocket';
+                    break;
+                case 'fly':
+                    window.location.href = '/fly_to_moon';
+                    break;
+                case 'memory':
+                    window.location.href = '/memory_game';
+                    break;
+                case 'puzzle':
+                    window.location.href = '/planets_puzzle';
+                    break;
+                case 'math':
+                    window.location.href = '/space_math';
+                    break;
+                case 'coloring':
+                    window.location.href = '/coloring_gallery';
+                    break;
+                default:
+                    console.log('Неизвестный тип игры:', gameType);
+            }
+        }
+
+        // Создаем звездное поле
+        function createStarfield() {
+            const starfield = document.querySelector('.starfield');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 3 + 1}px;
+                    height: ${Math.random() * 3 + 1}px;
+                    background: white;
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    animation: twinkle ${Math.random() * 3 + 2}s infinite;
+                    animation-delay: ${Math.random() * 3}s;
+                `;
+                starfield.appendChild(star);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', createStarfield);
+    </script>
+</body>
+</html>

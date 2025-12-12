@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔢 Космический счёт</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .math-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 30px;
+            border: 3px solid #ff00ff;
+            text-align: center;
+        }
+
+        .math-title {
+            font-size: 2.5rem;
+            color: #00ffff;
+            margin-bottom: 30px;
+        }
+
+        .rocket-area {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin: 30px 0;
+            background: linear-gradient(0deg, #0a0a2a, #1a1a4a);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 3px solid #00ffaa;
+        }
+
+        .rocket {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            transition: bottom 0.5s;
+        }
+
+        .fuel-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #00ffff;
+        }
+
+        .fuel-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff5500, #ffff00);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .problem-display {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 2px solid #ffff00;
+        }
+
+        .problem {
+            font-size: 3rem;
+            color: white;
+            margin: 20px 0;
+        }
+
+        .answer-input {
+            font-size: 2.5rem;
+            padding: 15px;
+            width: 200px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid #00ffff;
+            border-radius: 15px;
+            color: white;
+            margin: 20px;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .answer-btn {
+            padding: 20px;
+            font-size: 2rem;
+            background: linear-gradient(45deg, #2a2a5a, #3a3a7a);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .answer-btn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            color: gold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="kid-mode">
+    <div class="starfield"></div>
+
+    <button class="back-button" onclick="window.location.href='/games'" style="position: fixed; top: 20px; left: 20px; padding: 15px 25px; background: linear-gradient(45deg, #ff0066, #ff5500); color: white; border: none; border-radius: 20px; font-size: 1.2rem; cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 10px;">
+        ← Назад к играм
+    </button>
+
+    <div class="math-container">
+        <h1 class="math-title">🔢 КОСМИЧЕСКИЙ СЧЁТ</h1>
+
+        <div class="rocket-area">
+            <div class="rocket" id="rocket">🚀</div>
+            <div class="fuel-bar">
+                <div class="fuel-fill" id="fuel-fill"></div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 20px; color: #ffff00; font-size: 1.2rem;">
+                Цель: Долететь до Луны! 🌙
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div>Уровень</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div>Правильно</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+            <div class="stat">
+                <div>Неправильно</div>
+                <div class="stat-value" id="wrong">0</div>
+            </div>
+            <div class="stat">
+                <div>Топливо</div>
+                <div class="stat-value" id="fuel">100%</div>
+            </div>
+        </div>
+
+        <div class="problem-display">
+            <div style="color: #00ffaa; font-size: 1.5rem; margin-bottom: 10px;">
+                Реши пример чтобы заправить ракету:
+            </div>
+            <div class="problem" id="problem">5 + 3 = ?</div>
+
+            <div class="answers-grid" id="answers">
+                <!-- Ответы будут добавлены через JavaScript -->
+            </div>
+
+            <div style="margin-top: 20px;">
+                <input type="number" class="answer-input" id="answer-input" placeholder="Ответ">
+                <button onclick="checkAnswerInput()" style="padding: 15px 30px; background: linear-gradient(45deg, #00aa00, #00ff88); color: white; border: none; border-radius: 15px; font-size: 1.2rem; cursor: pointer; margin-left: 15px;">
+                    ✅ Проверить
+                </button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" onclick="generateProblem()">🔢 НОВЫЙ ПРИМЕР</button>
+            <button class="control-btn" onclick="resetGame()">🔄 ЗАНОВО</button>
+            <button class="control-btn" onclick="window.location.href='/games'">🏠 ВЫЙТИ</button>
+        </div>
+    </div>
+
+    <script>
+        let level = 1;
+        let correct = 0;
+        let wrong = 0;
+        let fuel = 100;
+        let currentAnswer = 0;
+        let rocketPosition = 50;
+        let problemsSolved = 0;
+
+        function generateProblem() {
+            let a, b, operator, answer;
+
+            // Увеличиваем сложность с уровнем
+            const maxNumber = 5 + level * 5;
+
+            // Выбираем операцию
+            const operations = ['+', '-', '×', '÷'];
+            const operation = operations[Math.floor(Math.random() * operations.length)];
+
+            switch(operation) {
+                case '+':
+                    a = Math.floor(Math.random() * maxNumber) + 1;
+                    b = Math.floor(Math.random() * maxNumber) + 1;
+                    answer = a + b;
+                    break;
+                case '-':
+                    a = Math.floor(Math.random() * maxNumber) + 1;
+                    b = Math.floor(Math.random() * a) + 1;
+                    answer = a - b;
+                    break;
+                case '×':
+                    a = Math.floor(Math.random() * (level + 2)) + 1;
+                    b = Math.floor(Math.random() * (level + 2)) + 1;
+                    answer = a * b;
+                    break;
+                case '÷':
+                    b = Math.floor(Math.random() * (level + 2)) + 1;
+                    answer = Math.floor(Math.random() * (level + 2)) + 1;
+                    a = b * answer;
+                    break;
+            }
+
+            currentAnswer = answer;
+
+            // Обновляем отображение задачи
+            document.getElementById('problem').textContent = `${a} ${operation} ${b} = ?`;
+
+            // Генерируем варианты ответов
+            generateAnswers(answer, maxNumber);
+        }
+
+        function generateAnswers(correctAnswer, maxNumber) {
+            const answersGrid = document.getElementById('answers');
+            answersGrid.innerHTML = '';
+
+            const answers = new Set([correctAnswer]);
+
+            // Добавляем 3 неправильных ответа
+            while (answers.size < 4) {
+                let wrongAnswer;
+                do {
+                    // Создаем неправильный ответ близкий к правильному
+                    const offset = Math.floor(Math.random() * 5) + 1;
+                    const sign = Math.random() > 0.5 ? 1 : -1;
+                    wrongAnswer = correctAnswer + (sign * offset);
+
+                    // Убедимся, что ответ положительный и разумный
+                    if (wrongAnswer < 0) wrongAnswer = Math.abs(wrongAnswer);
+                    if (wrongAnswer > maxNumber * 2) wrongAnswer = Math.floor(wrongAnswer / 2);
+
+                } while (answers.has(wrongAnswer) || wrongAnswer < 0);
+                answers.add(wrongAnswer);
+            }
+
+            // Преобразуем в массив и перемешиваем
+            const answersArray = Array.from(answers);
+            for (let i = answersArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [answersArray[i], answersArray[j]] = [answersArray[j], answersArray[i]];
+            }
+
+            // Создаем кнопки ответов
+            answersArray.forEach(answer => {
+                const button = document.createElement('button');
+                button.className = 'answer-btn';
+                button.textContent = answer;
+                button.onclick = () => checkAnswer(answer);
+                answersGrid.appendChild(button);
+            });
+        }
+
+        function checkAnswer(answer) {
+            if (answer === currentAnswer) {
+                // Правильный ответ
+                correct++;
+                problemsSolved++;
+                fuel = Math.min(100, fuel + 20);
+                rocketPosition += 20;
+
+                // Анимация
+                document.getElementById('rocket').style.bottom = rocketPosition + 'px';
+
+                // Добавляем звезды
+                addStar();
+
+                // Проверяем уровень
+                if (problemsSolved % 5 === 0) {
+                    level++;
+                    alert(`🎉 Уровень ${level}! Примеры становятся сложнее!`);
+                }
+
+                // Проверяем победу
+                if (rocketPosition >= 250) {
+                    endGame(true);
+                }
+            } else {
+                // Неправильный ответ
+                wrong++;
+                fuel = Math.max(0, fuel - 15);
+                rocketPosition = Math.max(50, rocketPosition - 10);
+                document.getElementById('rocket').style.bottom = rocketPosition + 'px';
+
+                if (fuel <= 0) {
+                    endGame(false);
+                }
+            }
+
+            updateDisplay();
+            generateProblem();
+        }
+
+        function checkAnswerInput() {
+            const input = document.getElementById('answer-input');
+            const answer = parseInt(input.value);
+
+            if (!isNaN(answer)) {
+                checkAnswer(answer);
+                input.value = '';
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('correct').textContent = correct;
+            document.getElementById('wrong').textContent = wrong;
+            document.getElementById('fuel').textContent = fuel + '%';
+            document.getElementById('fuel-fill').style.width = fuel + '%';
+        }
+
+        function resetGame() {
+            level = 1;
+            correct = 0;
+            wrong = 0;
+            fuel = 100;
+            rocketPosition = 50;
+            problemsSolved = 0;
+
+            document.getElementById('rocket').style.bottom = '50px';
+            updateDisplay();
+            generateProblem();
+        }
+
+        function endGame(win) {
+            if (win) {
+                alert(`🎉 ПОБЕДА! Ты добрался до Луны!\nРешено правильно: ${correct} примеров\nПолучено: ${correct} звёзд!`);
+
+                // Награда за победу
+                fetch('/add_star', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({count: correct, reason: 'Долететь до Луны в математике'})
+                });
+            } else {
+                alert(`⛽ Топливо закончилось!\nПравильных ответов: ${correct}\nПолучено: ${Math.floor(correct/2)} звёзд!`);
+
+                // Награда за игру
+                fetch('/add_star', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({count: Math.floor(correct/2), reason: 'Участие в космическом счёте'})
+                });
+            }
+
+            resetGame();
+        }
+
+        function addStar() {
+            fetch('/add_star', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({count: 1, reason: 'Правильный математический ответ'})
+            });
+        }
+
+        // Запускаем игру при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            resetGame();
+        });
+    </script>
+
+</body>
+</html>

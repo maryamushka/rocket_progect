@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Ракета, ты где? — Космическое приключение для детей!</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+</head>
+<body class="kid-mode">
+    <!-- ЗВЕЗДНЫЙ ФОН -->
+    <div class="starfield"></div>
+
+    <!-- ПРОФИЛЬ -->
+    <div class="profile-button" onclick="showProfile()">
+        <span class="profile-emoji avatar-emoji">👨‍🚀</span>
+        <div class="profile-info">
+            <div class="profile-name">Космонавт</div>
+            <div class="profile-stars">
+                <span class="star-emoji">⭐</span>
+                <span id="stars-count">{{ user_stars }}</span>
+            </div>
+        </div>
+        <!-- Добавить эту кнопку -->
+        <button onclick="showAvatarSelector(); event.stopPropagation();"
+                style="background: rgba(255,255,255,0.1); border: 1px solid #00ffff; color: #00ffff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem; margin-left: 10px;">
+            ✏️
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- ШАПКА -->
+        <header class="header">
+            <h1 class="main-title">🚀 РАКЕТА, ТЫ ГДЕ?</h1>
+            <p class="subtitle">Космическое приключение для юных исследователей! 🌟</p>
+            <p style="color: #aaa; font-size: 1.1rem; margin-top: 10px;">
+                Изучай, играй, раскрашивай и становись космическим экспертом!
+            </p>
+        </header>
+
+        <!-- ГЛАВНАЯ СЕКЦИЯ С ОТСЧЕТОМ -->
+        <!-- ТАЙМЕР ЗАПУСКА -->
+        <section class="launch-hero">
+            <div class="countdown-container">
+                <div class="countdown-title">🚀 СЛЕДУЮЩИЙ ЗАПУСК ЧЕРЕЗ:</div>
+
+                <div class="countdown-display">
+                    <div class="time-unit">
+                        <div class="time-value" id="countdown-hours">02</div>
+                        <div class="time-label">часов</div>
+                    </div>
+                    <div class="time-separator">:</div>
+                    <div class="time-unit">
+                        <div class="time-value" id="countdown-minutes">00</div>
+                        <div class="time-label">минут</div>
+                    </div>
+                    <div class="time-separator">:</div>
+                    <div class="time-unit">
+                        <div class="time-value" id="countdown-seconds">00</div>
+                        <div class="time-label">секунд</div>
+                    </div>
+                </div>
+
+                <div class="launch-info">
+                    <div class="rocket-icon">🚀</div>
+                    <div class="mission-info">
+                        <h3>Миссия: Starship IFT-4</h3>
+                        <p>SpaceX • Испытательный полёт • 15 декабря</p>
+                    </div>
+                </div>
+
+                <div class="progress-container-small">
+                    <div class="progress-label">До запуска:</div>
+                    <div class="progress-bar-small">
+                        <div class="progress-fill-small" id="launch-progress"></div>
+                    </div>
+                    <div class="progress-text-small" id="launch-progress-text">50%</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- КРУПНЫЕ КНОПКИ ДЕЙСТВИЙ -->
+        <section class="action-section">
+            <h2 class="section-title">✨ ЧЕМ ЗАЙМЕМСЯ СЕЙЧАС?</h2>
+            <div class="action-buttons">
+                <button class="mega-button play-btn" onclick="window.location.href='/games'">
+                    <i class="fas fa-gamepad"></i> ИГРЫ И РАЗВЛЕЧЕНИЯ
+                </button>
+            </div>
+        </section>
+
+        <!-- ИЗУЧЕНИЕ РАКЕТ -->
+        <section class="rocket-lab">
+            <h2 class="section-title">🔬 ВЫБЕРИ И ИЗУЧИ РАКЕТУ</h2>
+
+            <div style="text-align: center; margin-bottom: 30px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                <p style="font-size: 1.3rem; color: #ffff00; margin-bottom: 15px;">
+                    🎯 Вот как изучать ракеты:
+                </p>
+                <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2.5rem;">1️⃣</div>
+                        <div>Выбери ракету</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2.5rem;">2️⃣</div>
+                        <div>Нажми на кнопку<br>с её частью</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2.5rem;">3️⃣</div>
+                        <div>Узнай интересные<br>факты!</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2.5rem;">4️⃣</div>
+                        <div>Получи звёзды<br>за изучение!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rocket-selector">
+                <button class="active" onclick="selectRocket('falcon9')">
+                    <img src="{{ url_for('static', filename='images/rockets/falcon9.png') }}" width="50" height="50">
+                    <div>
+                        <div style="font-weight: bold;">Falcon 9</div>
+                        <div style="font-size: 0.8rem; color: #aaa;">SpaceX</div>
+                    </div>
+                </button>
+                <button onclick="selectRocket('starship')">
+                    <img src="{{ url_for('static', filename='images/rockets/starship.png') }}" width="50" height="50">
+                    <div>
+                        <div style="font-weight: bold;">Starship</div>
+                        <div style="font-size: 0.8rem; color: #aaa;">SpaceX</div>
+                    </div>
+                </button>
+                <button onclick="selectRocket('sojuz')">
+                    <img src="{{ url_for('static', filename='images/rockets/sojuz.png') }}" width="50" height="50">
+                    <div>
+                        <div style="font-weight: bold;">Союз</div>
+                        <div style="font-size: 0.8rem; color: #aaa;">Роскосмос</div>
+                    </div>
+                </button>
+            </div>
+
+            <div class="rocket-display">
+                <img id="rocket-image"
+                     src="{{ url_for('static', filename='images/rockets/falcon9.png') }}"
+                     alt="Ракета для изучения"
+                     class="detailed-rocket"
+                     onclick="showRandomPart()">
+
+                <div class="part-info" id="part-info">
+                    <h3 style="color: #ffff00; text-align: center;">👆 НАЖМИ НА РАКЕТУ!</h3>
+                    <p style="text-align: center; font-size: 1.2rem;">
+                        Нажми на любую часть ракеты, чтобы узнать о ней!
+                    </p>
+                    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
+                        <button onclick="showPartInfo('engine')" class="part-btn" style="background: linear-gradient(45deg, #ff4444, #ff0000);">
+                            <span style="font-size: 1.5rem;">🔥</span><br>Двигатель
+                        </button>
+                        <button onclick="showPartInfo('tank')" class="part-btn" style="background: linear-gradient(45deg, #44ff44, #00aa00);">
+                            <span style="font-size: 1.5rem;">⛽</span><br>Баки
+                        </button>
+                        <button onclick="showPartInfo('payload')" class="part-btn" style="background: linear-gradient(45deg, #4444ff, #0000ff);">
+                            <span style="font-size: 1.5rem;">🛰️</span><br>Нагрузка
+                        </button>
+                        <button onclick="showPartInfo('escape')" class="part-btn" style="background: linear-gradient(45deg, #ffff44, #ffaa00);">
+                            <span style="font-size: 1.5rem;">🆘</span><br>Спасение
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- РАСКРАСКА РАКЕТ -->
+        <section class="coloring-section" id="coloring-section">
+            <h2 class="section-title">🎨 РАСКРАСЬ СВОЮ РАКЕТУ!</h2>
+
+            <div class="coloring-controls">
+                <div class="color-palette">
+                    <div class="color" style="background: #ff0000;" onclick="selectColor('#ff0000')"></div>
+                    <div class="color" style="background: #00ff00;" onclick="selectColor('#00ff00')"></div>
+                    <div class="color" style="background: #0000ff;" onclick="selectColor('#0000ff')"></div>
+                    <div class="color" style="background: #ffff00;" onclick="selectColor('#ffff00')"></div>
+                    <div class="color" style="background: #ff00ff;" onclick="selectColor('#ff00ff')"></div>
+                    <div class="color" style="background: #00ffff;" onclick="selectColor('#00ffff')"></div>
+                    <div class="color" style="background: #ffffff;" onclick="selectColor('#ffffff')"></div>
+                    <div class="color" style="background: #000000;" onclick="selectColor('#000000')"></div>
+                </div>
+
+                <button onclick="clearCanvas()" style="background: #ff4444; color: white; padding: 10px 20px; border-radius: 20px; border: none; cursor: pointer;">
+                    🧹 Очистить
+                </button>
+                <button onclick="saveColoring()" style="background: #44ff44; color: black; padding: 10px 20px; border-radius: 20px; border: none; cursor: pointer;">
+                    💾 Сохранить
+                </button>
+                <button onclick="hideColoring()" style="background: #aaaaaa; color: black; padding: 10px 20px; border-radius: 20px; border: none; cursor: pointer;">
+                    ← Назад
+                </button>
+            </div>
+
+            <canvas id="coloring-canvas" width="800" height="500" class="coloring-canvas">
+                Ваш браузер не поддерживает Canvas
+            </canvas>
+
+            <p style="text-align: center; color: #aaa; margin-top: 20px;">
+                🎨 Выбери цвет и рисуй прямо на ракете!<br>
+                💾 Сохрани раскраску на компьютер!
+            </p>
+        </section>
+
+        <!-- ИГРА "СОБЕРИ РАКЕТУ" -->
+        <section class="build-game" id="build-game">
+            <h2 class="section-title">🧩 СОБЕРИ РАКЕТУ ИЗ ЧАСТЕЙ!</h2>
+
+            <p style="text-align: center; font-size: 1.2rem; margin: 20px 0;">
+                Перетащи детали на нужные места в ракете:
+            </p>
+
+            <div style="display: flex; justify-content: center; gap: 50px; margin: 40px 0; flex-wrap: wrap;">
+                <!-- ДЕТАЛИ -->
+                <div>
+                    <h3 style="color: #ffff00; margin-bottom: 20px;">📦 Детали ракеты:</h3>
+                    <div class="parts-container">
+                        <div class="part" data-part="engine">🔥 Двигатель</div>
+                        <div class="part" data-part="tank">⛽ Топливные баки</div>
+                        <div class="part" data-part="payload">🛰️ Полезная нагрузка</div>
+                        <div class="part" data-part="nose">👃 Обтекатель</div>
+                    </div>
+                </div>
+
+                <!-- РАКЕТА -->
+                <div>
+                    <h3 style="color: #00ffff; margin-bottom: 20px;">🚀 Ракета:</h3>
+                    <div class="rocket-silhouette">
+                        <div class="slot" data-slot="nose" style="position: absolute; top: 50px; left: 75px; width: 50px; height: 50px; border: 2px dashed white;"></div>
+                        <div class="slot" data-slot="payload" style="position: absolute; top: 120px; left: 75px; width: 50px; height: 80px; border: 2px dashed white;"></div>
+                        <div class="slot" data-slot="tank" style="position: absolute; top: 220px; left: 75px; width: 50px; height: 100px; border: 2px dashed white;"></div>
+                        <div class="slot" data-slot="engine" style="position: absolute; top: 340px; left: 75px; width: 50px; height: 60px; border: 2px dashed white;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="checkRocketBuild()" style="background: gold; color: black; padding: 15px 30px; border-radius: 25px; border: none; font-size: 1.2rem; cursor: pointer; margin: 0 10px;">
+                    ✅ Проверить сборку
+                </button>
+                <button onclick="hideBuildGame()" style="background: #666; color: white; padding: 15px 30px; border-radius: 25px; border: none; font-size: 1.2rem; cursor: pointer; margin: 0 10px;">
+                    ← Назад к играм
+                </button>
+            </div>
+
+            <p style="text-align: center; color: #aaa; margin-top: 30px;">
+                🎯 Задание: поставь каждую деталь на своё место!<br>
+                ⭐ За правильную сборку получишь звёзды!
+            </p>
+        </section>
+
+        <!-- БЛИЖАЙШИЕ МИССИИ -->
+        <section class="missions-section">
+            <h2 class="section-title">🛰️ КОСМИЧЕСКИЕ МИССИИ</h2>
+
+            <p style="text-align: center; color: #aaa; font-size: 1.2rem; margin: 20px 0 30px;">
+                Изучай миссии, получай звёзды и становись космическим экспертом!
+            </p>
+
+            <div class="mission-filters">
+                <button class="filter-btn active" onclick="filterMissions('all')">Все миссии</button>
+                <button class="filter-btn" onclick="filterMissions('upcoming')">Предстоящие</button>
+                <button class="filter-btn" onclick="filterMissions('completed')">Завершённые</button>
+                <button class="filter-btn" onclick="filterMissions('spacex')">SpaceX</button>
+                <button class="filter-btn" onclick="filterMissions('roscosmos')">Роскосмос</button>
+                <button class="filter-btn" onclick="filterMissions('nasa')">NASA</button>
+
+                <div class="search-container">
+                    <input type="text" class="mission-search" id="mission-search"
+                           placeholder="🔍 Поиск миссии..." onkeyup="searchMissions()">
+                    <button class="clear-search" onclick="clearSearch()">✕</button>
+                </div>
+            </div>
+
+            <div class="mission-cards">
+                {% for launch in launches %}
+                <div class="mission-card" onclick="showMissionDetail({{ launch.id }})" data-status="{{ launch.status }}" data-company="{{ launch.company|lower }}">
+                    <!-- Звёзды за миссию -->
+                    <div class="mission-stars">+2</div>
+
+                    <!-- Эмодзи миссии -->
+                    <div class="mission-emoji">{{ launch.emoji or '🚀' }}</div>
+
+                    <!-- Название миссии -->
+                    <h3 class="mission-name">{{ launch.name }}</h3>
+
+                    <!-- Дата и статус -->
+                    <div class="mission-date-container">
+                        <div class="mission-date">📅 {{ launch.date }} {{ launch.time or '' }}</div>
+                        <div class="status-badge {{ launch.status }}">
+                            {{ launch.status }}
+                        </div>
+                    </div>
+
+                    <!-- Интересный факт -->
+                    <p class="mission-fact">{{ launch.fun_fact }}</p>
+
+                    <!-- Индикатор сложности -->
+                    <div class="difficulty-indicator">
+                        {% set difficulty_level = {'простой': 1, 'средний': 2, 'сложный': 3} %}
+                        {% set level = difficulty_level.get(launch.difficulty, 2) %}
+                        {% for i in range(3) %}
+                        <div class="difficulty-dot {{ 'active' if i < level else '' }}"></div>
+                        {% endfor %}
+                        <span style="color: #aaa; font-size: 0.9rem; margin-left: 10px;">
+                            {{ launch.difficulty or 'средний' }}
+                        </span>
+                    </div>
+
+                    <!-- Инфо-бар -->
+                    <div class="mission-footer">
+                        <div class="rocket-badge">
+                            <i class="fas fa-rocket"></i>
+                            {{ launch.rocket }}
+                        </div>
+                        <div class="company-badge">
+                            🏢 {{ launch.company }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- ФУТЕР -->
+        <footer class="footer">
+            <button class="mode-switch" onclick="showParentStats()">
+                <i class="fas fa-user-astronaut"></i> Статистика для родителей
+            </button>
+            <p class="copyright">
+                🚀 Проект "Ракета, ты где?" • Для детей от 6 лет<br>
+                ✨ Изучай космос весело и безопасно!<br>
+                📧 По вопросам: rocket@example.com
+            </p>
+        </footer>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ МИССИЙ -->
+    <div id="mission-modal" class="modal-overlay">
+        <div class="modal-content">
+            <!-- Контент подгружается через JavaScript -->
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content profile-modal">
+            <button class="close-modal" onclick="closeProfile()">&times;</button>
+
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <div class="avatar-circle">
+                        <span class="avatar-emoji" style="font-size: 4rem;">🚀</span>
+                    </div>
+                </div>
+                <div class="profile-title">
+                    <h2 id="profile-display-name">👤 МОЙ КОСМИЧЕСКИЙ ПРОФИЛЬ</h2>
+                    <div class="profile-level">Уровень: <span id="profile-level">1</span></div>
+                    <button onclick="showAvatarSelector()"
+                            style="margin-top: 10px; background: rgba(255,255,255,0.1); border: 2px solid #ff00ff; color: white; padding: 8px 15px; border-radius: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem;">
+                        ✏️ Изменить аватар и имя
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-title">Всего звёзд</div>
+                    <div class="stat-value" id="total-stars">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-title">Игр сыграно</div>
+                    <div class="stat-value" id="games-played">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-title">Ракет изучено</div>
+                    <div class="stat-value" id="rockets-studied">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎨</div>
+                    <div class="stat-title">Раскрасок</div>
+                    <div class="stat-value" id="colorings-done">0</div>
+                </div>
+            </div>
+
+            <div class="badges-section">
+                <h3>🏆 МОИ ДОСТИЖЕНИЯ</h3>
+                <div class="badges-container" id="badges-container">
+                    <!-- Бейджи будут загружены через JavaScript -->
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <h3>📊 ПРОГРЕСС ДО СЛЕДУЮЩЕГО УРОВНЯ</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="level-progress"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="current-exp">0</span> из <span id="next-level-exp">100</span> звёзд
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h3>🕐 ПОСЛЕДНИЕ ДОСТИЖЕНИЯ</h3>
+                <div class="activity-list" id="activity-list">
+                    <!-- Активность будет загружена через JavaScript -->
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <button class="action-btn share-btn" onclick="shareProfile()">
+                    <i class="fas fa-share-alt"></i> Поделиться
+                </button>
+                <button class="action-btn shop-btn" onclick="showStarShop()">
+                    <i class="fas fa-store"></i> Магазин звёзд
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

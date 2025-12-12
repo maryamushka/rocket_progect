@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Космические раскраски</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gallery-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-tab:hover,
+        .category-tab.active {
+            background: #00ffff;
+            color: black;
+            transform: translateY(-5px);
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .image-card {
+            background: linear-gradient(135deg, #2a2a5a, #3a3a7a);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s;
+            border: 3px solid transparent;
+            position: relative;
+        }
+
+        .image-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            border-color: #ff00ff;
+            box-shadow: 0 20px 40px rgba(255, 0, 255, 0.3);
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 3px solid #00ffff;
+        }
+
+        .image-info {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .image-name {
+            color: #ffff00;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .image-category {
+            color: #00ffaa;
+            font-size: 0.9rem;
+            background: rgba(0, 255, 170, 0.1);
+            padding: 5px 15px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .start-coloring-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .image-card:hover .start-coloring-btn {
+            opacity: 1;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #ff0066, #ff5500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .no-images {
+            text-align: center;
+            padding: 50px;
+            color: #aaa;
+            font-size: 1.2rem;
+            grid-column: 1 / -1;
+        }
+
+        /* Индикатор загрузки */
+        .loading-indicator {
+            text-align: center;
+            padding: 50px;
+            color: #aaa;
+            font-size: 1.2rem;
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body class="kid-mode">
+    <div class="starfield"></div>
+
+    <button class="back-button" onclick="window.location.href='/games'">
+        <i class="fas fa-arrow-left"></i> Назад к играм
+    </button>
+
+    <div class="container">
+        <header class="header" style="margin-top: 60px;">
+            <h1 class="main-title">🎨 КОСМИЧЕСКИЕ РАСКРАСКИ</h1>
+            <p class="subtitle">Выбери картинку и раскрась её! 🌈</p>
+        </header>
+
+        <div class="gallery-container">
+            <!-- Категории -->
+            <div class="category-tabs" id="category-tabs">
+                <!-- Динамически загружаются через JavaScript -->
+                <div class="loading-indicator" id="loading-categories">
+                    Загружаем категории...
+                </div>
+            </div>
+
+            <!-- Сетка изображений -->
+            <div class="images-grid" id="images-grid">
+                <!-- Динамически загружаются через JavaScript -->
+                <div class="loading-indicator" id="loading-images">
+                    Загружаем раскраски...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allImages = [];
+        let currentCategory = 'all';
+
+        // Загружаем изображения
+        async function loadColoringImages() {
+            console.log('Начинаем загрузку изображений...');
+
+            try {
+                document.getElementById('loading-categories').style.display = 'block';
+                document.getElementById('loading-images').style.display = 'block';
+
+                const response = await fetch('/get_coloring_images');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const categories = await response.json();
+                console.log('Получены категории:', categories);
+
+                allImages = categories;
+                document.getElementById('loading-categories').style.display = 'none';
+                document.getElementById('loading-images').style.display = 'none';
+
+                renderCategoryTabs();
+                renderImages();
+
+            } catch (error) {
+                console.error('Ошибка загрузки изображений:', error);
+                document.getElementById('loading-categories').style.display = 'none';
+                document.getElementById('loading-images').style.display = 'none';
+
+                document.getElementById('images-grid').innerHTML = `
+                    <div class="no-images">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">😢</div>
+                        <p>Не удалось загрузить раскраски.</p>
+                        <p>Ошибка: ${error.message}</p>
+                        <button onclick="loadColoringImages()"
+                                style="margin-top: 20px; padding: 10px 20px; background: #00ffff; color: black; border: none; border-radius: 10px; cursor: pointer;">
+                            Попробовать снова
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Рендерим категории
+        function renderCategoryTabs() {
+            const tabsContainer = document.getElementById('category-tabs');
+
+            if (!allImages || allImages.length === 0) {
+                tabsContainer.innerHTML = '<p style="color: #aaa; text-align: center; width: 100%;">Нет категорий</p>';
+                return;
+            }
+
+            // Кнопка "Все"
+            let html = `
+                <div class="category-tab ${currentCategory === 'all' ? 'active' : ''}"
+                     onclick="filterByCategory('all')">
+                    <span>🎨</span>
+                    <span>Все раскраски</span>
+                </div>
+            `;
+
+            // Кнопки категорий
+            allImages.forEach(category => {
+                html += `
+                    <div class="category-tab ${currentCategory === category.category ? 'active' : ''}"
+                         onclick="filterByCategory('${category.category}')">
+                        <span>${category.emoji}</span>
+                        <span>${category.name}</span>
+                    </div>
+                `;
+            });
+
+            tabsContainer.innerHTML = html;
+        }
+
+        // Рендерим изображения
+        function renderImages() {
+            const gridContainer = document.getElementById('images-grid');
+
+            let imagesToShow = [];
+
+            if (currentCategory === 'all') {
+                // Показываем все изображения из всех категорий
+                allImages.forEach(category => {
+                    if (category.images && category.images.length > 0) {
+                        imagesToShow.push(...category.images);
+                    }
+                });
+            } else {
+                // Показываем только выбранную категорию
+                const category = allImages.find(cat => cat.category === currentCategory);
+                if (category && category.images) {
+                    imagesToShow = category.images;
+                }
+            }
+
+            if (imagesToShow.length === 0) {
+                gridContainer.innerHTML = `
+                    <div class="no-images">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🎨</div>
+                        <p>Нет раскрасок в этой категории.</p>
+                        <p>Выберите другую категорию.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            imagesToShow.forEach(image => {
+                console.log('Обрабатываем изображение:', image);
+                const category = allImages.find(cat => cat.category === image.category);
+                const categoryName = category ? category.name : image.category;
+
+                html += `
+                    <div class="image-card" onclick="startColoring('${image.path}', '${image.name}')">
+                        <img src="${image.path}"
+                             alt="${image.name}"
+                             class="image-preview"
+                             loading="lazy"
+                             onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"250\" height=\"200\" viewBox=\"0 0 250 200\"><rect width=\"100%\" height=\"100%\" fill=\"%23222\"/><text x=\"50%\" y=\"50%\" text-anchor=\"middle\" dy=\".3em\" fill=\"%23fff\" font-family=\"Arial\">🎨 ${image.name}</text></svg>'">
+                        <div class="image-info">
+                            <div class="image-name">${image.name}</div>
+                            <div class="image-category">${categoryName}</div>
+                        </div>
+                        <button class="start-coloring-btn" onclick="event.stopPropagation(); startColoring('${image.path}', '${image.name}')">
+                            🎨
+                        </button>
+                    </div>
+                `;
+            });
+
+            gridContainer.innerHTML = html;
+        }
+
+        // Фильтруем по категории
+        function filterByCategory(category) {
+            console.log('Фильтруем по категории:', category);
+            currentCategory = category;
+            renderCategoryTabs();
+            renderImages();
+        }
+
+        // Запускаем раскраску
+        function startColoring(imagePath, imageName) {
+            console.log('Запускаем раскраску:', imagePath, imageName);
+
+            // Проверяем корректность пути
+            if (!imagePath || !imagePath.startsWith('/static/coloring/')) {
+                alert('Ошибка: неправильный путь к изображению');
+                console.error('Неправильный путь:', imagePath);
+                return;
+            }
+
+            // Сохраняем выбранную картинку в localStorage
+            localStorage.setItem('selectedColoring', JSON.stringify({
+                path: imagePath,
+                name: imageName
+            }));
+
+            // Переходим на страницу раскраски
+            window.location.href = '/coloring_page';
+        }
+
+        // Создаем звездное поле
+        function createStarfield() {
+            const starfield = document.querySelector('.starfield');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 3 + 1}px;
+                    height: ${Math.random() * 3 + 1}px;
+                    background: white;
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    animation: twinkle ${Math.random() * 3 + 2}s infinite;
+                    animation-delay: ${Math.random() * 3}s;
+                `;
+                starfield.appendChild(star);
+            }
+        }
+
+        // Загружаем при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Страница галереи загружена');
+            createStarfield();
+            loadColoringImages();
+
+            // Для отладки
+            setTimeout(() => {
+                if (allImages.length === 0) {
+                    console.log('Нет изображений, проверяем структуру папок...');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

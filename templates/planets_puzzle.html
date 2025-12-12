@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪐 Планеты-пазлы</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .puzzle-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 30px;
+            border: 3px solid #00ffff;
+            text-align: center;
+        }
+
+        .puzzle-title {
+            font-size: 2.5rem;
+            color: #ffff00;
+            margin-bottom: 30px;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .puzzle-piece {
+            width: 100%;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #ff00ff;
+            border-radius: 15px;
+            cursor: grab;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .puzzle-piece img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s;
+        }
+
+        .puzzle-piece:hover {
+            transform: scale(1.05);
+            border-color: #00ffff;
+        }
+
+        .puzzle-board {
+            width: 600px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 3px dashed #00ffaa;
+            border-radius: 20px;
+            margin: 30px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 2px dashed white;
+            border-radius: 10px;
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+        }
+
+        .score {
+            font-size: 2rem;
+            color: #ffff00;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            color: #00ffff;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid gold;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body class="kid-mode">
+    <div class="starfield"></div>
+
+    <button class="back-button" onclick="window.location.href='/games'" style="position: fixed; top: 20px; left: 20px; padding: 15px 25px; background: linear-gradient(45deg, #ff0066, #ff5500); color: white; border: none; border-radius: 20px; font-size: 1.2rem; cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 10px;">
+        ← Назад к играм
+    </button>
+
+    <div class="puzzle-container">
+        <h1 class="puzzle-title">🪐 ПЛАНЕТЫ-ПАЗЛЫ</h1>
+
+        <div class="game-info">
+            <div>
+                <div>Найденные:</div>
+                <div class="score" id="score">0/12</div>
+            </div>
+            <div>
+                <div>Время:</div>
+                <div class="timer" id="timer">02:00</div>
+            </div>
+            <div>
+                <div>Уровень:</div>
+                <div style="font-size: 1.5rem; color: #00ffaa;" id="level">1</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="puzzle-pieces">
+            <!-- Пазлы будут добавлены через JavaScript -->
+        </div>
+
+        <div class="puzzle-board" id="puzzle-board">
+            <!-- Зоны для пазлов -->
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" onclick="startGame()">▶️ НАЧАТЬ</button>
+            <button class="control-btn" onclick="resetGame()">🔄 ЗАНОВО</button>
+            <button class="control-btn" onclick="window.location.href='/games'">🏠 ВЫЙТИ</button>
+        </div>
+    </div>
+
+    <div class="message" id="message">
+        <h2 style="color: gold; margin-bottom: 20px;">🎉 ПОБЕДА!</h2>
+        <p style="font-size: 1.2rem;">Ты собрал все пазлы!</p>
+        <button onclick="window.location.href='/games'" style="margin-top: 20px; padding: 10px 20px; background: gold; color: black; border: none; border-radius: 10px; font-size: 1.1rem; cursor: pointer;">
+            ✅ ОК
+        </button>
+    </div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 120;
+        let gameActive = false;
+        let timerInterval;
+        let planets = [
+            'earth', 'mars', 'jupiter', 'saturn', 'venus', 'mercury',
+            'uranus', 'neptune', 'moon', 'sun', 'pluto', 'comet'
+        ];
+
+        function createPuzzle() {
+            const piecesContainer = document.getElementById('puzzle-pieces');
+            const board = document.getElementById('puzzle-board');
+
+            // Очищаем предыдущие элементы
+            piecesContainer.innerHTML = '';
+            board.innerHTML = '';
+
+            // Создаем кусочки пазлов
+            planets.forEach((planet, index) => {
+                // Кусочек пазла
+                const piece = document.createElement('div');
+                piece.className = 'puzzle-piece';
+                piece.draggable = true;
+                piece.dataset.planet = planet;
+                piece.dataset.index = index;
+
+                // Используем эмодзи вместо изображений
+                const emojis = {
+                    'earth': '🌍', 'mars': '🔴', 'jupiter': '🪐',
+                    'saturn': '🪐', 'venus': '⭐', 'mercury': '🌕',
+                    'uranus': '🪐', 'neptune': '🔵', 'moon': '🌙',
+                    'sun': '☀️', 'pluto': '🌑', 'comet': '☄️'
+                };
+
+                // Пробуем загрузить изображение, если не загрузится - показываем эмодзи
+                piece.innerHTML = `
+                    <div style="position: relative; width: 100%; height: 100%;">
+                        <img src="/static/game_images/planets/${planet}.png"
+                             alt="${planet}"
+                             style="width: 100%; height: 100%; object-fit: cover;"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'font-size: 4rem; margin-top: 40px;\\'>${emojis[planet] || '🪐'}</div>';">
+                    </div>
+                `;
+
+                piece.addEventListener('dragstart', dragStart);
+                piecesContainer.appendChild(piece);
+
+                // Зона для сброса
+                const zone = document.createElement('div');
+                zone.className = 'drop-zone';
+                zone.dataset.planet = planet;
+                zone.style.left = (index % 4) * 150 + 'px';
+                zone.style.top = Math.floor(index / 4) * 150 + 'px';
+
+                zone.addEventListener('dragover', dragOver);
+                zone.addEventListener('drop', drop);
+
+                board.appendChild(zone);
+            });
+
+            // Запускаем таймер
+            startTimer();
+        }
+
+        function dragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.planet);
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            const planet = e.dataTransfer.getData('text/plain');
+            const zone = e.target;
+
+            if (zone.dataset.planet === planet) {
+                zone.style.background = 'rgba(0, 255, 0, 0.3)';
+                zone.style.border = '2px solid #00ff00';
+                zone.innerHTML = `<div style="font-size: 3rem; text-align: center; margin-top: 40px;">✅</div>`;
+
+                score++;
+                document.getElementById('score').textContent = `${score}/12`;
+
+                // Находим и удаляем соответствующий кусочек
+                const piece = document.querySelector(`.puzzle-piece[data-planet="${planet}"]`);
+                if (piece) {
+                    piece.style.opacity = '0.3';
+                    piece.style.pointerEvents = 'none';
+                }
+
+                // Проверяем победу
+                if (score === 12) {
+                    endGame(true);
+                }
+
+                // Добавляем звезды
+                addStar();
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 120;
+            updateTimer();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            document.getElementById('score').textContent = '0/12';
+            createPuzzle();
+        }
+
+        function resetGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            score = 0;
+            document.getElementById('score').textContent = '0/12';
+            timeLeft = 120;
+            updateTimer();
+            createPuzzle();
+        }
+
+        function endGame(win) {
+            gameActive = false;
+            clearInterval(timerInterval);
+
+            const message = document.getElementById('message');
+            if (win) {
+                message.querySelector('h2').textContent = '🎉 ПОБЕДА!';
+                message.querySelector('p').textContent = `Ты собрал все пазлы за ${120 - timeLeft} секунд! +5 звёзд!`;
+
+                // Награда за победу
+                fetch('/add_star', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({count: 5, reason: 'Собрал все пазлы планет'})
+                });
+            } else {
+                message.querySelector('h2').textContent = '⏰ ВРЕМЯ ВЫШЛО';
+                message.querySelector('p').textContent = `Собрано: ${score}/12 пазлов. Попробуй ещё раз!`;
+            }
+            message.style.display = 'block';
+        }
+
+        function addStar() {
+            fetch('/add_star', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({count: 1, reason: 'Нашел правильную планету'})
+            });
+        }
+
+        // Запускаем игру при загрузке
+        document.addEventListener('DOMContentLoaded', startGame);
+    </script>
+
+</body>
+</html>
