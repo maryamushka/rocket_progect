@@ -93,11 +93,6 @@
             box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
         }
 
-        .part-emoji {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
         .part-name {
             color: white;
             font-size: 1.1rem;
@@ -123,8 +118,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #aaa;
-            font-size: 0.9rem;
             transition: all 0.3s;
         }
 
@@ -134,37 +127,36 @@
         }
 
         .drop-zone.filled {
-            background: rgba(0, 255, 0, 0.3);
+            background: rgba(0, 255, 0, 0.1);
             border-color: #00ff00;
-            color: white;
         }
 
         .drop-zone.top {
-            top: 40px;
-            left: 50px;
-            right: 50px;
-            height: 80px;
-        }
-
-        .drop-zone.middle {
-            top: 140px;
-            left: 60px;
-            right: 60px;
+            top: 20px;
+            left: 30px;
+            right: 30px;
             height: 100px;
         }
 
-        .drop-zone.bottom {
-            bottom: 60px;
-            left: 70px;
-            right: 70px;
+        .drop-zone.middle {
+            top: 120px;
+            left: 40px;
+            right: 40px;
             height: 120px;
         }
 
+        .drop-zone.bottom {
+            bottom: 40px;
+            left: 50px;
+            right: 50px;
+            height: 140px;
+        }
+
         .drop-zone.engine {
-            bottom: 20px;
-            left: 85px;
-            right: 85px;
-            height: 40px;
+            bottom: 10px;
+            left: 70px;
+            right: 70px;
+            height: 50px;
         }
 
         .game-controls {
@@ -269,6 +261,40 @@
             margin-top: 10px;
             animation: pulse 2s infinite;
         }
+
+        .part-image {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 8px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Добавьте в конец секции <style> */
+        @keyframes rocketAppear {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Также добавьте для картинок частей, чтобы не вылезали */
+        .drop-zone.filled img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;  /* Важно: вписывает картинку в рамку */
+            padding: 5px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body class="kid-mode">
@@ -301,19 +327,11 @@
                 <div class="rocket-section">
                     <h2 class="section-title">🚀 Собери ракету здесь</h2>
                     <div class="rocket-silhouette" id="rocket-silhouette">
-                        <!-- Зоны для сброса деталей -->
-                        <div class="drop-zone top" data-zone="top" data-part="nose">
-                            <span class="zone-label">👃 Нос ракеты</span>
-                        </div>
-                        <div class="drop-zone middle" data-zone="middle" data-part="body">
-                            <span class="zone-label">🚀 Корпус</span>
-                        </div>
-                        <div class="drop-zone bottom" data-zone="bottom" data-part="tank">
-                            <span class="zone-label">⛽ Топливный бак</span>
-                        </div>
-                        <div class="drop-zone engine" data-zone="engine" data-part="engine">
-                            <span class="zone-label">🔥 Двигатель</span>
-                        </div>
+                        <!-- Зоны для сброса деталей (без текста внутри) -->
+                        <div class="drop-zone top" data-zone="top" data-part="nose"></div>
+                        <div class="drop-zone middle" data-zone="middle" data-part="body"></div>
+                        <div class="drop-zone bottom" data-zone="bottom" data-part="tank"></div>
+                        <div class="drop-zone engine" data-zone="engine" data-part="engine"></div>
                     </div>
 
                     <!-- Статистика -->
@@ -388,7 +406,10 @@
                 partElement.dataset.partId = part.id;
 
                 partElement.innerHTML = `
-                    <div class="part-emoji">${part.emoji}</div>
+                    <img src="/static/game_images/rocket_parts/${part.id}.png"
+                         class="part-image"
+                         alt="${part.name}"
+                         onerror="this.onerror=null; this.src='#'; this.parentElement.innerHTML='<div style=\\'font-size: 2.5rem; margin-bottom: 10px;\\'>${part.emoji}</div><div class=\\'part-name\\'>${part.name}</div>'">
                     <div class="part-name">${part.name}</div>
                 `;
 
@@ -471,32 +492,35 @@
             if (isCorrect) {
                 // Правильная зона
                 zone.innerHTML = `
-                    <div style="text-align: center;">
-                        <div style="font-size: 2rem;">${part.emoji}</div>
-                        <div style="color: #00ff00; font-size: 0.9rem;">${part.name}</div>
-                        <div style="color: #aaa; font-size: 0.8rem;">✅ Верно!</div>
-                    </div>
+                    <img src="/static/game_images/rocket_parts/${part.id}.png"
+                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"
+                         alt="${part.name}">
                 `;
                 zone.classList.add('filled');
                 zone.classList.remove('hover');
+                zone.style.border = '2px solid #00ff00';
+                zone.style.background = 'rgba(0, 255, 0, 0.1)';
 
                 // Скрываем перетаскиваемую деталь
                 const partElement = document.getElementById(`part-${partId}`);
-                partElement.style.display = 'none';
+                if (partElement) {
+                    partElement.style.display = 'none';
+                }
 
                 collectedParts++;
                 updateStats();
 
-                // Воспроизводим звук успеха
-                playSound('success');
-                showNotification(`✅ Отлично! ${part.name} на месте!`);
-
                 // Проверяем, собрана ли вся ракета
                 if (collectedParts === totalParts) {
                     setTimeout(() => {
-                        completeGame();
-                    }, 500);
+                        // Показываем целую ракету
+                        showCompleteRocket();
+                    }, 300);
                 }
+
+                // Воспроизводим звук успеха
+                playSound('success');
+                showNotification(`✅ Отлично! ${part.name} на месте!`);
             } else {
                 // Неправильная зона
                 zone.innerHTML = `
@@ -508,8 +532,10 @@
 
                 // Через секунду возвращаем зону в исходное состояние
                 setTimeout(() => {
-                    zone.innerHTML = `<span class="zone-label">${zone.querySelector('.zone-label')?.textContent || 'Перетащи сюда'}</span>`;
+                    zone.innerHTML = '';
                     zone.classList.remove('hover');
+                    zone.style.border = '2px dashed #ffff00';
+                    zone.style.background = 'rgba(255, 255, 255, 0.1)';
                 }, 1000);
 
                 attempts++;
@@ -519,6 +545,101 @@
                 playSound('error');
                 showNotification(`❌ ${part.name} не подходит для этой зоны!`);
             }
+        }
+
+        // Показ целой собранной ракеты
+        function showCompleteRocket() {
+            const silhouette = document.getElementById('rocket-silhouette');
+
+            // Скрываем все зоны
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.style.display = 'none';
+            });
+
+            // Очищаем силуэт и настраиваем его для целой ракеты
+            silhouette.innerHTML = '';
+            silhouette.style.background = 'transparent'; // Убираем градиентный фон
+            silhouette.style.border = 'none'; // Убираем старую рамку
+            silhouette.style.boxShadow = 'none'; // Убираем тень
+            silhouette.style.borderRadius = '0'; // Убираем скругление
+
+            // Создаем контейнер для картинки
+            const imageContainer = document.createElement('div');
+            imageContainer.style.cssText = `
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+            `;
+
+            // Создаем рамку вокруг картинки
+            const frame = document.createElement('div');
+            frame.style.cssText = `
+                width: 180px;  // Фиксированная ширина
+                height: 360px; // Фиксированная высота
+                border: 4px solid gold;
+                border-radius: 90px 90px 15px 15px;
+                overflow: hidden;
+                position: relative;
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+                background: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8));
+            `;
+
+            // Добавляем картинку внутрь рамки
+            const img = document.createElement('img');
+            img.src = '/static/game_images/rocket_parts/complete_rocket.png';
+            img.alt = 'Собранная ракета';
+            img.style.cssText = `
+                width: 100%;
+                height: 100%;
+                object-fit: contain;  // Важно: сохраняет пропорции
+                padding: 10px;
+                display: block;
+            `;
+
+            // Добавляем обработчик ошибок
+            img.onerror = function() {
+                this.style.display = 'none';
+                frame.innerHTML = `
+                    <div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#00ff00;">
+                        <div style="font-size:3rem;">🎉</div>
+                        <div style="font-size:1.2rem; margin-top:10px;">Ракета собрана!</div>
+                        <div style="font-size:0.8rem; margin-top:5px; color:#aaa;">(целая картинка не найдена)</div>
+                    </div>
+                `;
+            };
+
+            // Добавляем текст
+            const text = document.createElement('div');
+            text.innerHTML = '🎉 Ракета собрана!';
+            text.style.cssText = `
+                position: absolute;
+                bottom: 10px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                color: #00ff00;
+                font-weight: bold;
+                font-size: 1.1rem;
+                text-shadow: 0 0 5px black;
+                z-index: 10;
+            `;
+
+            // Собираем всё вместе
+            frame.appendChild(img);
+            frame.appendChild(text);
+            imageContainer.appendChild(frame);
+            silhouette.appendChild(imageContainer);
+
+            // Добавляем анимацию появления
+            frame.style.animation = 'rocketAppear 0.8s ease-out';
+
+            // Через 2 секунды завершаем игру
+            setTimeout(() => {
+                completeGame();
+            }, 2000);
         }
 
         // Проверка сборки
@@ -532,7 +653,7 @@
             updateStats();
 
             if (collectedParts === totalParts) {
-                completeGame();
+                showCompleteRocket();
             } else {
                 const message = document.getElementById('completion-message');
                 message.textContent = `Собрано ${collectedParts} из ${totalParts} деталей. Продолжай собирать!`;
@@ -630,13 +751,13 @@
             attempts = 0;
             gameCompleted = false;
 
-            // Сбрасываем зоны
+            // Сбрасываем зоны (делаем их пустыми)
             document.querySelectorAll('.drop-zone').forEach(zone => {
-                zone.innerHTML = `<span class="zone-label">${zone.dataset.part === 'nose' ? '👃 Нос ракеты' :
-                                                    zone.dataset.part === 'body' ? '🚀 Корпус' :
-                                                    zone.dataset.part === 'tank' ? '⛽ Топливный бак' :
-                                                    '🔥 Двигатель'}</span>`;
+                zone.innerHTML = '';
                 zone.classList.remove('filled', 'hover');
+                zone.style.border = '2px dashed #ffff00';
+                zone.style.background = 'rgba(255, 255, 255, 0.1)';
+                zone.style.display = 'block';
             });
 
             // Показываем все детали
@@ -650,6 +771,22 @@
             // Сбрасываем анимацию ракеты
             const rocket = document.getElementById('rocket-silhouette');
             rocket.style.animation = '';
+            rocket.style.border = '4px solid #00ffaa';
+            rocket.style.boxShadow = '0 0 20px rgba(0, 255, 170, 0.3)';
+            rocket.innerHTML = `
+                <div class="drop-zone top" data-zone="top" data-part="nose"></div>
+                <div class="drop-zone middle" data-zone="middle" data-part="body"></div>
+                <div class="drop-zone bottom" data-zone="bottom" data-part="tank"></div>
+                <div class="drop-zone engine" data-zone="engine" data-part="engine"></div>
+            `;
+
+            // Снова добавляем события для зон
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
 
             // Скрываем сообщение
             const message = document.getElementById('completion-message');

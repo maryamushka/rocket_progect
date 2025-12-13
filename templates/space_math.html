@@ -3,234 +3,1069 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔢 Космический счёт</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>🚀 Космический счёт</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .math-container {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 30px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 30px;
-            border: 3px solid #ff00ff;
+        /* ОСНОВНЫЕ СТИЛИ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0a2a, #1a1a4a, #2a2a6a);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .planet {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(2px);
+            z-index: -1;
+        }
+
+        .planet1 {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            right: 5%;
+            background: radial-gradient(circle at 30% 30%, #ff9966, #ff5e62);
+            box-shadow: 0 0 100px rgba(255, 94, 98, 0.5);
+        }
+
+        .planet2 {
+            width: 200px;
+            height: 200px;
+            bottom: 15%;
+            left: 5%;
+            background: radial-gradient(circle at 40% 40%, #6a11cb, #2575fc);
+            box-shadow: 0 0 80px rgba(37, 117, 252, 0.4);
+        }
+
+        /* КНОПКА НАЗАД */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #ff0066, #ff5500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(255, 0, 102, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(255, 0, 102, 0.5);
+        }
+
+        /* ОСНОВНОЙ КОНТЕЙНЕР */
+        .math-game {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* ЗАГОЛОВОК */
+        .game-header {
             text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 30px;
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
         }
 
-        .math-title {
-            font-size: 2.5rem;
+        .game-title {
+            font-size: 3.5rem;
+            color: #ffff00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px yellow, 0 0 30px orange;
+            font-family: 'Comic Sans MS', cursive;
+            animation: titleGlow 2s infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 15px yellow; }
+            100% { text-shadow: 0 0 25px yellow, 0 0 40px orange; }
+        }
+
+        .game-subtitle {
             color: #00ffff;
-            margin-bottom: 30px;
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
         }
 
-        .rocket-area {
+        /* ПЛАНЕТА И РАКЕТА */
+        .planet-display {
             position: relative;
             width: 100%;
-            height: 300px;
-            margin: 30px 0;
-            background: linear-gradient(0deg, #0a0a2a, #1a1a4a);
-            border-radius: 20px;
+            height: 400px;
+            margin: 40px auto;
+            background: linear-gradient(0deg, #000428, #004e92);
+            border-radius: 30px;
             overflow: hidden;
-            border: 3px solid #00ffaa;
+            border: 4px solid #ff00ff;
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.4);
+        }
+
+        .moon {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle at 30% 30%, #cccccc, #999999);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
+            animation: moonGlow 3s infinite alternate;
+        }
+
+        @keyframes moonGlow {
+            0% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.6); }
+            100% { box-shadow: 0 0 60px rgba(255, 255, 255, 0.8); }
+        }
+
+        .rocket-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .rocket {
+            font-size: 5rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+            animation: rocketFloat 2s infinite alternate;
+        }
+
+        @keyframes rocketFloat {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        .rocket-trail {
             position: absolute;
-            bottom: 50px;
+            bottom: -20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 4rem;
-            transition: bottom 0.5s;
+            width: 10px;
+            height: 100px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0), #ff5500);
+            filter: blur(3px);
+        }
+
+        /* ШКАЛА ТОПЛИВА */
+        .fuel-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 15px;
+            border: 2px solid #00ffff;
+            backdrop-filter: blur(5px);
+        }
+
+        .fuel-label {
+            color: #00ffff;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .fuel-bar {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 20px;
+            height: 25px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
-            border: 2px solid #00ffff;
+            position: relative;
         }
 
         .fuel-fill {
             height: 100%;
-            background: linear-gradient(90deg, #ff5500, #ffff00);
-            width: 0%;
-            transition: width 0.5s;
+            background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00);
+            width: 100%;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .fuel-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                transparent 100%);
+            animation: fuelShine 2s infinite;
+        }
+
+        @keyframes fuelShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* СТАТИСТИКА */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card:nth-child(1) { border-color: #00ffff; }
+        .stat-card:nth-child(2) { border-color: #ffff00; }
+        .stat-card:nth-child(3) { border-color: #ff00ff; }
+        .stat-card:nth-child(4) { border-color: #00ffaa; }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .stat-card:nth-child(1) .stat-value { color: #00ffff; }
+        .stat-card:nth-child(2) .stat-value { color: #ffff00; }
+        .stat-card:nth-child(3) .stat-value { color: #ff00ff; }
+        .stat-card:nth-child(4) .stat-value { color: #00ffaa; }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+        }
+
+        /* ЗОНА ЗАДАЧИ */
+        .problem-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 30px;
+            padding: 40px;
+            margin: 40px 0;
+            border: 3px solid #ffff00;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.3);
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .problem-header {
+            color: #00ffaa;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .problem-display {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
             padding: 30px;
             margin: 20px 0;
-            border: 2px solid #ffff00;
+            border: 2px solid #00ffff;
         }
 
         .problem {
-            font-size: 3rem;
+            font-size: 4rem;
             color: white;
             margin: 20px 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+        }
+
+        .problem-info {
+            color: #aaa;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+
+        /* ВАРИАНТЫ ОТВЕТОВ */
+        .answers-section {
+            margin: 40px 0;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        @media (max-width: 600px) {
+            .answers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .answer-btn {
+            padding: 25px;
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #1a1a4a, #2a2a6a);
+            border: 3px solid #00ffff;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .answer-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent);
+            transition: 0.5s;
+        }
+
+        .answer-btn:hover::before {
+            left: 100%;
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            border-color: #ffff00;
+            box-shadow: 0 5px 25px rgba(255, 255, 0, 0.3);
+            background: linear-gradient(135deg, #2a2a6a, #3a3a8a);
+        }
+
+        .answer-btn.correct {
+            background: linear-gradient(135deg, #00aa00, #00ff88);
+            border-color: #00ff00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            animation: correctPulse 0.5s;
+        }
+
+        .answer-btn.wrong {
+            background: linear-gradient(135deg, #aa0000, #ff5555);
+            border-color: #ff0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            animation: wrongShake 0.5s;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* ПОЛЕ ВВОДА */
+        .input-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 2px solid #ff00ff;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 500px;
+            margin: 0 auto;
         }
 
         .answer-input {
             font-size: 2.5rem;
-            padding: 15px;
+            padding: 20px;
             width: 200px;
             text-align: center;
             background: rgba(255, 255, 255, 0.1);
             border: 3px solid #00ffff;
             border-radius: 15px;
             color: white;
-            margin: 20px;
-        }
-
-        .answers-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin: 30px 0;
-        }
-
-        .answer-btn {
-            padding: 20px;
-            font-size: 2rem;
-            background: linear-gradient(45deg, #2a2a5a, #3a3a7a);
-            border: 2px solid #00ffff;
-            border-radius: 15px;
-            color: white;
-            cursor: pointer;
             transition: all 0.3s;
         }
 
-        .answer-btn:hover {
-            transform: scale(1.1);
-            background: linear-gradient(45deg, #00ffff, #ff00ff);
+        .answer-input:focus {
+            outline: none;
+            border-color: #ffff00;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+            transform: scale(1.05);
         }
 
-        .game-stats {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
+        .check-btn {
+            padding: 18px 40px;
+            background: linear-gradient(45deg, #00aa00, #00ff88);
+            color: white;
+            border: none;
             border-radius: 20px;
-            margin: 20px 0;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .stat {
-            text-align: center;
+        .check-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+            background: linear-gradient(45deg, #00ff88, #00aa00);
         }
 
-        .stat-value {
-            font-size: 2rem;
-            color: gold;
-        }
-
+        /* КНОПКИ УПРАВЛЕНИЯ */
         .controls {
             display: flex;
-            gap: 15px;
             justify-content: center;
-            margin-top: 30px;
+            gap: 20px;
+            margin-top: 40px;
+            flex-wrap: wrap;
         }
 
         .control-btn {
-            padding: 15px 30px;
+            padding: 20px 35px;
             background: linear-gradient(45deg, #ff00ff, #00ffff);
             color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(255, 0, 255, 0.5);
+        }
+
+        .control-btn:nth-child(2) {
+            background: linear-gradient(45deg, #00ffff, #0088ff);
+        }
+
+        .control-btn:nth-child(2):hover {
+            box-shadow: 0 6px 25px rgba(0, 136, 255, 0.5);
+        }
+
+        .control-btn:nth-child(3) {
+            background: linear-gradient(45deg, #ff5500, #ffaa00);
+        }
+
+        .control-btn:nth-child(3):hover {
+            box-shadow: 0 6px 25px rgba(255, 85, 0, 0.5);
+        }
+
+        /* ВСПЛЫВАЮЩИЕ СООБЩЕНИЯ */
+        .message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .message-box {
+            background: linear-gradient(135deg, #0a0a2a, #1a1a4a);
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            border: 4px solid;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(255, 255, 0, 0.5);
+            animation: messageAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes messageAppear {
+            0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .message-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px currentColor;
+        }
+
+        .win-title {
+            color: gold;
+            border-color: gold;
+        }
+
+        .lose-title {
+            color: #ff5555;
+            border-color: #ff5555;
+        }
+
+        .message-text {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .message-stats {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .message-btn {
+            padding: 15px 40px;
+            background: linear-gradient(45deg, gold, orange);
+            color: black;
             border: none;
             border-radius: 20px;
             font-size: 1.2rem;
             cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .message-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(255, 165, 0, 0.5);
+        }
+
+        /* АНИМАЦИИ */
+        @keyframes rocketLaunch {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100vh); }
+        }
+
+        .rocket-launch {
+            animation: rocketLaunch 2s forwards cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* СПИКЕРЫ (TOOLTIPS) */
+        .control-btn[title],
+        .check-btn[title] {
+            position: relative;
+        }
+
+        .control-btn[title]:hover::after,
+        .check-btn[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 40, 0.95);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            z-index: 1000;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            pointer-events: none;
+            backdrop-filter: blur(5px);
+        }
+
+        .control-btn[title]:hover::before,
+        .check-btn[title]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: #00ffff;
+            z-index: 1000;
+        }
+
+        /* СВЕТЯЩИЕСЯ ЗВЕЗДЫ */
+        .floating-star {
+            position: absolute;
+            background: radial-gradient(circle, #fff 0%, transparent 70%);
+            border-radius: 50%;
+            animation: floatStar 20s linear infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes floatStar {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* ДОСТИЖЕНИЯ */
+        .achievements {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .achievement {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .achievement.unlocked {
+            opacity: 1;
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid gold;
+            box-shadow: 0 0 15px gold;
+            transform: scale(1.1);
+        }
+
+        /* АДАПТИВНОСТЬ */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2.5rem;
+            }
+
+            .problem {
+                font-size: 3rem;
+            }
+
+            .answer-btn {
+                font-size: 1.8rem;
+                padding: 20px;
+            }
+
+            .control-btn {
+                min-width: 160px;
+                padding: 15px 25px;
+                font-size: 1rem;
+            }
+
+            .planet-display {
+                height: 300px;
+            }
+
+            .rocket {
+                font-size: 4rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-title {
+                font-size: 2rem;
+            }
+
+            .stats-container {
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .control-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        /* ЭФФЕКТ ПОЛУЧЕНИЯ ЗВЕЗД */
+        .star-effect {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            animation: starPop 1s forwards;
+        }
+
+        @keyframes starPop {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
         }
     </style>
 </head>
-<body class="kid-mode">
-    <div class="starfield"></div>
+<body class="math-game">
+    <!-- ЗВЕЗДНОЕ ПОЛЕ -->
+    <div class="starfield" id="starfield"></div>
 
-    <button class="back-button" onclick="window.location.href='/games'" style="position: fixed; top: 20px; left: 20px; padding: 15px 25px; background: linear-gradient(45deg, #ff0066, #ff5500); color: white; border: none; border-radius: 20px; font-size: 1.2rem; cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 10px;">
-        ← Назад к играм
+    <!-- ПЛАНЕТЫ -->
+    <div class="planet planet1"></div>
+    <div class="planet planet2"></div>
+
+    <!-- КНОПКА НАЗАД -->
+    <button class="back-button" onclick="window.location.href='/games'" title="Вернуться к выбору игр">
+        <i class="fas fa-arrow-left"></i> К ИГРАМ
     </button>
 
-    <div class="math-container">
-        <h1 class="math-title">🔢 КОСМИЧЕСКИЙ СЧЁТ</h1>
-
-        <div class="rocket-area">
-            <div class="rocket" id="rocket">🚀</div>
-            <div class="fuel-bar">
-                <div class="fuel-fill" id="fuel-fill"></div>
-            </div>
-            <div style="position: absolute; top: 20px; left: 20px; color: #ffff00; font-size: 1.2rem;">
-                Цель: Долететь до Луны! 🌙
+    <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
+    <div class="math-game">
+        <!-- ЗАГОЛОВОК -->
+        <div class="game-header">
+            <h1 class="game-title">🚀 КОСМИЧЕСКИЙ СЧЁТ</h1>
+            <div class="game-subtitle">
+                Решай примеры, заправляй ракету топливом и доберись до Луны!
+                Чем больше правильных ответов - тем больше звёзд получишь! ✨
             </div>
         </div>
 
-        <div class="game-stats">
-            <div class="stat">
-                <div>Уровень</div>
-                <div class="stat-value" id="level">1</div>
+        <!-- ПЛАНЕТА И РАКЕТА -->
+        <div class="planet-display">
+            <!-- ЛУНА -->
+            <div class="moon">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: black; font-size: 1.2rem; font-weight: bold; text-align: center;">
+                    🌙<br>ЦЕЛЬ
+                </div>
             </div>
-            <div class="stat">
-                <div>Правильно</div>
-                <div class="stat-value" id="correct">0</div>
+
+            <!-- РАКЕТА -->
+            <div class="rocket-container" id="rocketContainer">
+                <div class="rocket" id="rocket">🚀</div>
+                <div class="rocket-trail"></div>
             </div>
-            <div class="stat">
-                <div>Неправильно</div>
-                <div class="stat-value" id="wrong">0</div>
+
+            <!-- ШКАЛА ТОПЛИВА -->
+            <div class="fuel-container">
+                <div class="fuel-label">
+                    <span>⛽ ТОПЛИВО РАКЕТЫ</span>
+                    <span id="fuelPercent">100%</span>
+                </div>
+                <div class="fuel-bar">
+                    <div class="fuel-fill" id="fuelFill"></div>
+                </div>
             </div>
-            <div class="stat">
-                <div>Топливо</div>
-                <div class="stat-value" id="fuel">100%</div>
+
+            <!-- ЗВЕЗДЫ НА ПУТИ -->
+            <div id="spaceStars"></div>
+        </div>
+
+        <!-- СТАТИСТИКА -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-label">🌕 УРОВЕНЬ</div>
+                <div class="stat-value" id="levelValue">1</div>
+                <div class="stat-label">Сложность</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">✅ ПРАВИЛЬНО</div>
+                <div class="stat-value" id="correctValue">0</div>
+                <div class="stat-label">Ответов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">❌ ОШИБОК</div>
+                <div class="stat-value" id="wrongValue">0</div>
+                <div class="stat-label">Макс: 3</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⭐ ЗВЁЗДЫ</div>
+                <div class="stat-value" id="starsValue">0</div>
+                <div class="stat-label">Собрано</div>
             </div>
         </div>
 
-        <div class="problem-display">
-            <div style="color: #00ffaa; font-size: 1.5rem; margin-bottom: 10px;">
-                Реши пример чтобы заправить ракету:
-            </div>
-            <div class="problem" id="problem">5 + 3 = ?</div>
+        <!-- ДОСТИЖЕНИЯ -->
+        <div class="achievements" id="achievements">
+            <div class="achievement" id="achieve1" title="Решить 3 примера">3️⃣</div>
+            <div class="achievement" id="achieve2" title="Решить 5 примеров">5️⃣</div>
+            <div class="achievement" id="achieve3" title="Решить 10 примеров">🔟</div>
+            <div class="achievement" id="achieve4" title="Долететь до Луны">🌙</div>
+            <div class="achievement" id="achieve5" title="Не сделать ошибок">💯</div>
+        </div>
 
-            <div class="answers-grid" id="answers">
-                <!-- Ответы будут добавлены через JavaScript -->
+        <!-- ЗОНА ЗАДАЧИ -->
+        <div class="problem-container">
+            <div class="problem-header">
+                <i class="fas fa-calculator"></i>
+                РЕШИ ПРИМЕР, ЧТОБЫ ЗАПРАВИТЬ РАКЕТУ:
             </div>
 
-            <div style="margin-top: 20px;">
-                <input type="number" class="answer-input" id="answer-input" placeholder="Ответ">
-                <button onclick="checkAnswerInput()" style="padding: 15px 30px; background: linear-gradient(45deg, #00aa00, #00ff88); color: white; border: none; border-radius: 15px; font-size: 1.2rem; cursor: pointer; margin-left: 15px;">
-                    ✅ Проверить
-                </button>
+            <div class="problem-display">
+                <div class="problem" id="problemDisplay">5 + 3 = ?</div>
+                <div class="problem-info" id="problemInfo">
+                    Уровень 1 • Простые примеры • +1 звезда за ответ
+                </div>
+            </div>
+
+            <!-- ВАРИАНТЫ ОТВЕТОВ -->
+            <div class="answers-section">
+                <div class="answers-grid" id="answersGrid">
+                    <!-- Ответы будут добавлены через JavaScript -->
+                </div>
+            </div>
+
+            <!-- ПОЛЕ ДЛЯ ВВОДА ОТВЕТА -->
+            <div class="input-section">
+                <div class="input-group">
+                    <input type="number"
+                           class="answer-input"
+                           id="answerInput"
+                           placeholder="Твой ответ"
+                           onkeypress="handleKeyPress(event)">
+                    <button class="check-btn" onclick="checkInputAnswer()" title="Проверить ответ (или нажми Enter)">
+                        <i class="fas fa-check-circle"></i> ПРОВЕРИТЬ ОТВЕТ
+                    </button>
+                </div>
             </div>
         </div>
 
+        <!-- КНОПКИ УПРАВЛЕНИЯ -->
         <div class="controls">
-            <button class="control-btn" onclick="generateProblem()">🔢 НОВЫЙ ПРИМЕР</button>
-            <button class="control-btn" onclick="resetGame()">🔄 ЗАНОВО</button>
-            <button class="control-btn" onclick="window.location.href='/games'">🏠 ВЫЙТИ</button>
+            <button class="control-btn" onclick="generateNewProblem()" title="Получить новый пример">
+                <i class="fas fa-redo"></i> НОВЫЙ ПРИМЕР
+            </button>
+            <button class="control-btn" onclick="resetGame()" title="Начать игру заново">
+                <i class="fas fa-rocket"></i> НОВАЯ ИГРА
+            </button>
+            <button class="control-btn" onclick="window.location.href='/games'" title="Вернуться к выбору игр">
+                <i class="fas fa-gamepad"></i> ВЫБОР ИГР
+            </button>
+        </div>
+    </div>
+
+    <!-- СООБЩЕНИЕ О ПОБЕДЕ -->
+    <div class="message-overlay" id="winMessage">
+        <div class="message-box" style="border-color: gold;">
+            <div class="message-title win-title">🎉 УРА! ТЫ ДОЛЕТЕЛ ДО ЛУНЫ! 🌙</div>
+            <div class="message-text">
+                Молодец! Ты успешно решил все примеры и заправил ракету!
+            </div>
+            <div class="message-stats" id="winStats">
+                <!-- Статистика будет добавлена -->
+            </div>
+            <button class="message-btn" onclick="closeMessage('winMessage'); resetGame();">
+                <i class="fas fa-play"></i> ИГРАТЬ СНОВА
+            </button>
+        </div>
+    </div>
+
+    <!-- СООБЩЕНИЕ О ПОРАЖЕНИИ -->
+    <div class="message-overlay" id="loseMessage">
+        <div class="message-box" style="border-color: #ff5555;">
+            <div class="message-title lose-title">⛽ ТОПЛИВО ЗАКОНЧИЛОСЬ!</div>
+            <div class="message-text">
+                Ракета не смогла долететь до Луны...
+                Но ты можешь попробовать снова!
+            </div>
+            <div class="message-stats" id="loseStats">
+                <!-- Статистика будет добавлена -->
+            </div>
+            <button class="message-btn" onclick="closeMessage('loseMessage'); resetGame();">
+                <i class="fas fa-redo"></i> ПОПРОБОВАТЬ СНОВА
+            </button>
         </div>
     </div>
 
     <script>
-        let level = 1;
-        let correct = 0;
-        let wrong = 0;
-        let fuel = 100;
-        let currentAnswer = 0;
-        let rocketPosition = 50;
-        let problemsSolved = 0;
+        // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+        let gameState = {
+            level: 1,
+            correct: 0,
+            wrong: 0,
+            fuel: 100,
+            stars: 0,
+            rocketProgress: 0,
+            problemsSolved: 0,
+            currentAnswer: 0,
+            maxWrong: 3,
+            rocketPosition: 0,
+            moonDistance: 300
+        };
 
+        // ========== ИНИЦИАЛИЗАЦИЯ ИГРЫ ==========
+        function initGame() {
+            createStarfield();
+            createSpaceStars();
+            resetGame();
+        }
+
+        // ========== СОЗДАНИЕ ЗВЕЗДНОГО ПОЛЯ ==========
+        function createStarfield() {
+            const starfield = document.getElementById('starfield');
+            starfield.innerHTML = '';
+
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.cssText = `
+                    width: ${Math.random() * 3 + 1}px;
+                    height: ${Math.random() * 3 + 1}px;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    opacity: ${Math.random() * 0.5 + 0.2};
+                    animation-duration: ${Math.random() * 2 + 1}s;
+                    animation-delay: ${Math.random() * 2}s;
+                `;
+                starfield.appendChild(star);
+            }
+        }
+
+        // ========== СОЗДАНИЕ ЗВЕЗД НА ПУТИ ==========
+        function createSpaceStars() {
+            const spaceStars = document.getElementById('spaceStars');
+            spaceStars.innerHTML = '';
+
+            // Создаем 10 звезд на пути к луне
+            for (let i = 1; i <= 10; i++) {
+                const star = document.createElement('div');
+                star.className = 'floating-star';
+                star.id = `spaceStar${i}`;
+                star.style.cssText = `
+                    width: ${20 + Math.random() * 10}px;
+                    height: ${20 + Math.random() * 10}px;
+                    left: ${40 + Math.random() * 40}%;
+                    top: ${(i * 30) + Math.random() * 10}px;
+                    animation-delay: ${Math.random() * 5}s;
+                    opacity: 0.3;
+                `;
+                star.innerHTML = '⭐';
+                spaceStars.appendChild(star);
+            }
+        }
+
+        // ========== ГЕНЕРАЦИЯ ПРИМЕРОВ ==========
         function generateProblem() {
             let a, b, operator, answer;
+            const maxNumber = 5 + gameState.level * 5;
+            const operationChance = Math.random();
 
-            // Увеличиваем сложность с уровнем
-            const maxNumber = 5 + level * 5;
+            // Выбираем операцию в зависимости от уровня
+            let operations;
+            if (gameState.level <= 2) {
+                operations = ['+', '-'];
+            } else if (gameState.level <= 4) {
+                operations = ['+', '-', '×'];
+            } else {
+                operations = ['+', '-', '×', '÷'];
+            }
 
-            // Выбираем операцию
-            const operations = ['+', '-', '×', '÷'];
             const operation = operations[Math.floor(Math.random() * operations.length)];
 
+            // Генерируем числа и ответ
             switch(operation) {
                 case '+':
                     a = Math.floor(Math.random() * maxNumber) + 1;
@@ -243,28 +1078,55 @@
                     answer = a - b;
                     break;
                 case '×':
-                    a = Math.floor(Math.random() * (level + 2)) + 1;
-                    b = Math.floor(Math.random() * (level + 2)) + 1;
+                    a = Math.floor(Math.random() * Math.min(10, gameState.level + 2)) + 1;
+                    b = Math.floor(Math.random() * Math.min(10, gameState.level + 2)) + 1;
                     answer = a * b;
                     break;
                 case '÷':
-                    b = Math.floor(Math.random() * (level + 2)) + 1;
-                    answer = Math.floor(Math.random() * (level + 2)) + 1;
+                    b = Math.floor(Math.random() * Math.min(10, gameState.level + 2)) + 1;
+                    answer = Math.floor(Math.random() * Math.min(10, gameState.level + 2)) + 1;
                     a = b * answer;
                     break;
             }
 
-            currentAnswer = answer;
+            gameState.currentAnswer = answer;
 
-            // Обновляем отображение задачи
-            document.getElementById('problem').textContent = `${a} ${operation} ${b} = ?`;
+            // Обновляем отображение
+            document.getElementById('problemDisplay').innerHTML = `
+                <span style="color: #00ffff;">${a}</span>
+                <span style="color: #ffff00; margin: 0 20px;">${operation}</span>
+                <span style="color: #00ffaa;">${b}</span>
+                <span style="color: white; margin: 0 20px;">=</span>
+                <span style="color: #ff00ff;">?</span>
+            `;
+
+            // Обновляем информацию об уровне
+            document.getElementById('problemInfo').textContent =
+                `Уровень ${gameState.level} • ${getOperationName(operation)} • +${getStarsForAnswer()} звезд за ответ`;
 
             // Генерируем варианты ответов
             generateAnswers(answer, maxNumber);
         }
 
+        function getOperationName(op) {
+            const names = {
+                '+': 'сложение',
+                '-': 'вычитание',
+                '×': 'умножение',
+                '÷': 'деление'
+            };
+            return names[op] || 'примеры';
+        }
+
+        function getStarsForAnswer() {
+            if (gameState.level <= 2) return 1;
+            if (gameState.level <= 4) return 2;
+            return 3;
+        }
+
+        // ========== ГЕНЕРАЦИЯ ОТВЕТОВ ==========
         function generateAnswers(correctAnswer, maxNumber) {
-            const answersGrid = document.getElementById('answers');
+            const answersGrid = document.getElementById('answersGrid');
             answersGrid.innerHTML = '';
 
             const answers = new Set([correctAnswer]);
@@ -272,17 +1134,18 @@
             // Добавляем 3 неправильных ответа
             while (answers.size < 4) {
                 let wrongAnswer;
+                const attempts = 0;
                 do {
-                    // Создаем неправильный ответ близкий к правильному
-                    const offset = Math.floor(Math.random() * 5) + 1;
+                    // Создаем неправильный ответ
+                    const offset = Math.floor(Math.random() * Math.max(2, gameState.level)) + 1;
                     const sign = Math.random() > 0.5 ? 1 : -1;
                     wrongAnswer = correctAnswer + (sign * offset);
 
-                    // Убедимся, что ответ положительный и разумный
-                    if (wrongAnswer < 0) wrongAnswer = Math.abs(wrongAnswer);
-                    if (wrongAnswer > maxNumber * 2) wrongAnswer = Math.floor(wrongAnswer / 2);
+                    // Корректируем если нужно
+                    if (wrongAnswer < 0) wrongAnswer = Math.abs(wrongAnswer) + 1;
+                    if (wrongAnswer > maxNumber * 2) wrongAnswer = Math.floor(correctAnswer / 2) || 1;
 
-                } while (answers.has(wrongAnswer) || wrongAnswer < 0);
+                } while (answers.has(wrongAnswer));
                 answers.add(wrongAnswer);
             }
 
@@ -298,119 +1161,407 @@
                 const button = document.createElement('button');
                 button.className = 'answer-btn';
                 button.textContent = answer;
-                button.onclick = () => checkAnswer(answer);
+                button.onclick = () => checkAnswer(answer, button);
                 answersGrid.appendChild(button);
             });
         }
 
-        function checkAnswer(answer) {
-            if (answer === currentAnswer) {
+        // ========== ПРОВЕРКА ОТВЕТА ==========
+        function checkAnswer(answer, button) {
+            if (answer === gameState.currentAnswer) {
                 // Правильный ответ
-                correct++;
-                problemsSolved++;
-                fuel = Math.min(100, fuel + 20);
-                rocketPosition += 20;
-
-                // Анимация
-                document.getElementById('rocket').style.bottom = rocketPosition + 'px';
-
-                // Добавляем звезды
-                addStar();
-
-                // Проверяем уровень
-                if (problemsSolved % 5 === 0) {
-                    level++;
-                    alert(`🎉 Уровень ${level}! Примеры становятся сложнее!`);
-                }
-
-                // Проверяем победу
-                if (rocketPosition >= 250) {
-                    endGame(true);
-                }
+                handleCorrectAnswer(button);
             } else {
                 // Неправильный ответ
-                wrong++;
-                fuel = Math.max(0, fuel - 15);
-                rocketPosition = Math.max(50, rocketPosition - 10);
-                document.getElementById('rocket').style.bottom = rocketPosition + 'px';
-
-                if (fuel <= 0) {
-                    endGame(false);
-                }
+                handleWrongAnswer(button);
             }
-
-            updateDisplay();
-            generateProblem();
         }
 
-        function checkAnswerInput() {
-            const input = document.getElementById('answer-input');
+        function handleCorrectAnswer(button) {
+            // Визуальный эффект
+            button.classList.add('correct');
+
+            // Обновляем статистику
+            gameState.correct++;
+            gameState.problemsSolved++;
+            gameState.fuel = Math.min(100, gameState.fuel + 20);
+            gameState.rocketProgress += 20;
+
+            // Добавляем звезды
+            const starsEarned = getStarsForAnswer();
+            gameState.stars += starsEarned;
+            createStarEffect(starsEarned);
+
+            // Двигаем ракету
+            moveRocket();
+
+            // Проверяем достижения
+            checkAchievements();
+
+            // Проверяем уровень
+            if (gameState.problemsSolved % 5 === 0) {
+                gameState.level++;
+                showLevelUpMessage();
+            }
+
+            // Проверяем победу
+            if (gameState.rocketProgress >= gameState.moonDistance) {
+                setTimeout(() => endGame(true), 1000);
+            }
+
+            // Обновляем отображение
+            updateDisplay();
+
+            // Генерируем новый пример через секунду
+            setTimeout(() => {
+                generateProblem();
+                // Сбрасываем стиль кнопки
+                if (button) button.classList.remove('correct');
+            }, 1000);
+        }
+
+        function handleWrongAnswer(button) {
+            // Визуальный эффект
+            button.classList.add('wrong');
+
+            // Находим правильную кнопку
+            const buttons = document.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => {
+                if (parseInt(btn.textContent) === gameState.currentAnswer) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            // Обновляем статистику
+            gameState.wrong++;
+            gameState.fuel = Math.max(0, gameState.fuel - 25);
+            gameState.rocketProgress = Math.max(0, gameState.rocketProgress - 15);
+
+            // Двигаем ракету назад
+            moveRocket();
+
+            // Проверяем поражение
+            if (gameState.wrong >= gameState.maxWrong || gameState.fuel <= 0) {
+                setTimeout(() => endGame(false), 1500);
+            }
+
+            // Обновляем отображение
+            updateDisplay();
+
+            // Генерируем новый пример через 1.5 секунды
+            setTimeout(() => {
+                generateProblem();
+                // Сбрасываем стили кнопок
+                buttons.forEach(btn => {
+                    btn.classList.remove('correct', 'wrong');
+                });
+            }, 1500);
+        }
+
+        // ========== ПРОВЕРКА ВВОДА С КЛАВИАТУРЫ ==========
+        function checkInputAnswer() {
+            const input = document.getElementById('answerInput');
             const answer = parseInt(input.value);
 
             if (!isNaN(answer)) {
-                checkAnswer(answer);
+                // Находим кнопку с таким ответом или создаем виртуальную
+                const buttons = document.querySelectorAll('.answer-btn');
+                let foundButton = null;
+
+                buttons.forEach(btn => {
+                    if (parseInt(btn.textContent) === answer) {
+                        foundButton = btn;
+                    }
+                });
+
+                if (foundButton) {
+                    checkAnswer(answer, foundButton);
+                } else {
+                    // Создаем виртуальную кнопку для проверки
+                    checkAnswer(answer, null);
+                }
+
                 input.value = '';
+                input.focus();
             }
         }
 
-        function updateDisplay() {
-            document.getElementById('level').textContent = level;
-            document.getElementById('correct').textContent = correct;
-            document.getElementById('wrong').textContent = wrong;
-            document.getElementById('fuel').textContent = fuel + '%';
-            document.getElementById('fuel-fill').style.width = fuel + '%';
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                checkInputAnswer();
+            }
         }
 
-        function resetGame() {
-            level = 1;
-            correct = 0;
-            wrong = 0;
-            fuel = 100;
-            rocketPosition = 50;
-            problemsSolved = 0;
+        // ========== ДВИЖЕНИЕ РАКЕТЫ ==========
+        function moveRocket() {
+            const rocketContainer = document.getElementById('rocketContainer');
+            const progressPercent = (gameState.rocketProgress / gameState.moonDistance) * 100;
+            const newPosition = Math.min(100, progressPercent);
 
-            document.getElementById('rocket').style.bottom = '50px';
-            updateDisplay();
+            // Вычисляем новую позицию (от 0 до 100%)
+            rocketContainer.style.bottom = `${30 + (newPosition * 2.2)}px`;
+
+            // Показываем/скрываем звезды на пути
+            updateSpaceStars();
+        }
+
+        function updateSpaceStars() {
+            const progressPercent = (gameState.rocketProgress / gameState.moonDistance) * 100;
+
+            // Показываем звезды, которые уже пройдены
+            for (let i = 1; i <= 10; i++) {
+                const star = document.getElementById(`spaceStar${i}`);
+                if (star) {
+                    const starPosition = i * 10; // Каждая звезда на 10% пути
+                    if (progressPercent >= starPosition) {
+                        star.style.opacity = '1';
+                        star.style.transform = 'scale(1.2)';
+                    } else {
+                        star.style.opacity = '0.3';
+                        star.style.transform = 'scale(1)';
+                    }
+                }
+            }
+        }
+
+        // ========== ЭФФЕКТЫ ЗВЕЗД ==========
+        function createStarEffect(count) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const star = document.createElement('div');
+                    star.className = 'star-effect';
+                    star.innerHTML = '⭐';
+                    star.style.cssText = `
+                        position: fixed;
+                        top: ${Math.random() * 100}%;
+                        left: ${Math.random() * 100}%;
+                        font-size: ${20 + Math.random() * 20}px;
+                        z-index: 1000;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(star);
+
+                    // Удаляем через 1 секунду
+                    setTimeout(() => {
+                        star.remove();
+                    }, 1000);
+                }, i * 200);
+            }
+        }
+
+        // ========== ОБНОВЛЕНИЕ ОТОБРАЖЕНИЯ ==========
+        function updateDisplay() {
+            document.getElementById('levelValue').textContent = gameState.level;
+            document.getElementById('correctValue').textContent = gameState.correct;
+            document.getElementById('wrongValue').textContent = `${gameState.wrong}/${gameState.maxWrong}`;
+            document.getElementById('starsValue').textContent = gameState.stars;
+            document.getElementById('fuelPercent').textContent = `${Math.round(gameState.fuel)}%`;
+            document.getElementById('fuelFill').style.width = `${gameState.fuel}%`;
+
+            // Меняем цвет топлива в зависимости от уровня
+            const fuelFill = document.getElementById('fuelFill');
+            if (gameState.fuel > 70) {
+                fuelFill.style.background = 'linear-gradient(90deg, #00ff00, #00ffaa)';
+            } else if (gameState.fuel > 30) {
+                fuelFill.style.background = 'linear-gradient(90deg, #ffff00, #ffaa00)';
+            } else {
+                fuelFill.style.background = 'linear-gradient(90deg, #ff0000, #ff5500)';
+            }
+        }
+
+        // ========== СООБЩЕНИЯ ==========
+        function showLevelUpMessage() {
+            const message = `🎉 УРОВЕНЬ ${gameState.level}!\nТеперь примеры будут сложнее!\n+1 звезда за каждый ответ!`;
+            showHint(message, '📈 ПОВЫШЕНИЕ УРОВНЯ!');
+        }
+
+        function showHint(text, title) {
+            // Создаем временное сообщение
+            const hint = document.createElement('div');
+            hint.className = 'hint-message';
+            hint.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 40, 0.95);
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                border: 3px solid #00ffff;
+                box-shadow: 0 0 40px #00ffff;
+                z-index: 2000;
+                text-align: center;
+                min-width: 300px;
+                backdrop-filter: blur(10px);
+                animation: messageAppear 0.5s;
+            `;
+
+            hint.innerHTML = `
+                <div style="color: #00ffff; font-size: 1.5rem; margin-bottom: 10px;">${title}</div>
+                <div style="font-size: 1.2rem;">${text}</div>
+            `;
+
+            document.body.appendChild(hint);
+
+            setTimeout(() => {
+                hint.remove();
+            }, 2000);
+        }
+
+        // ========== ДОСТИЖЕНИЯ ==========
+        function checkAchievements() {
+            // 3 примера
+            if (gameState.problemsSolved >= 3) {
+                document.getElementById('achieve1').classList.add('unlocked');
+            }
+
+            // 5 примеров
+            if (gameState.problemsSolved >= 5) {
+                document.getElementById('achieve2').classList.add('unlocked');
+            }
+
+            // 10 примеров
+            if (gameState.problemsSolved >= 10) {
+                document.getElementById('achieve3').classList.add('unlocked');
+            }
+
+            // Уровень 3 (оставляем отдельным достижением)
+            if (gameState.level >= 3) {
+                // Можно сохранить это достижение или заменить на что-то другое
+                // Например: "Решить 20 примеров" или "Набрать 50 звёзд"
+            }
+
+            // Нет ошибок (только если решили хотя бы 5 примеров)
+            if (gameState.wrong === 0 && gameState.problemsSolved >= 5) {
+                document.getElementById('achieve5').classList.add('unlocked');
+            }
+        }
+
+        // ========== КОНЕЦ ИГРЫ ==========
+        function endGame(win) {
+            if (win) {
+                // Разблокируем достижение "Долететь до Луны"
+                document.getElementById('achieve4').classList.add('unlocked');
+
+                // Запускаем анимацию полета
+                const rocket = document.getElementById('rocket');
+                rocket.classList.add('rocket-launch');
+
+                // Показываем сообщение о победе
+                setTimeout(() => {
+                    document.getElementById('winStats').innerHTML = `
+                        ✅ Правильных ответов: ${gameState.correct}<br>
+                        ⭐ Собрано звёзд: ${gameState.stars}<br>
+                        🌕 Достигнут уровень: ${gameState.level}<br>
+                        <br>
+                        🎁 Награда: +${Math.floor(gameState.stars * 1.5)} звёзд!
+                    `;
+                    showMessage('winMessage');
+
+                    // Начисляем звёзды
+                    awardStars(Math.floor(gameState.stars * 1.5), 'Победа в Космическом счёте');
+                }, 2000);
+            } else {
+                // Показываем сообщение о поражении
+                document.getElementById('loseStats').innerHTML = `
+                    ✅ Правильных ответов: ${gameState.correct}<br>
+                    ❌ Ошибок: ${gameState.wrong}<br>
+                    ⭐ Собрано звёзд: ${gameState.stars}<br>
+                    <br>
+                    🎁 Награда за участие: +${Math.floor(gameState.stars / 2)} звёзд!
+                `;
+                showMessage('loseMessage');
+
+                // Начисляем звёзды за участие
+                awardStars(Math.floor(gameState.stars / 2), 'Участие в Космическом счёте');
+            }
+        }
+
+        function showMessage(messageId) {
+            document.getElementById(messageId).style.display = 'flex';
+        }
+
+        function closeMessage(messageId) {
+            document.getElementById(messageId).style.display = 'none';
+        }
+
+        // ========== НАЧИСЛЕНИЕ ЗВЁЗД ==========
+        async function awardStars(count, reason) {
+            try {
+                const response = await fetch('/add_star', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        count: count,
+                        reason: reason
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(`Начислено ${count} звёзд. Всего: ${data.stars}`);
+                }
+            } catch (error) {
+                console.log('Ошибка начисления звёзд:', error);
+            }
+        }
+
+        // ========== УПРАВЛЕНИЕ ИГРОЙ ==========
+        function generateNewProblem() {
             generateProblem();
         }
 
-        function endGame(win) {
-            if (win) {
-                alert(`🎉 ПОБЕДА! Ты добрался до Луны!\nРешено правильно: ${correct} примеров\nПолучено: ${correct} звёзд!`);
+        function resetGame() {
+            // Сбрасываем состояние игры
+            gameState = {
+                level: 1,
+                correct: 0,
+                wrong: 0,
+                fuel: 100,
+                stars: 0,
+                rocketProgress: 0,
+                problemsSolved: 0,
+                currentAnswer: 0,
+                maxWrong: 3,
+                rocketPosition: 0,
+                moonDistance: 300
+            };
 
-                // Награда за победу
-                fetch('/add_star', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({count: correct, reason: 'Долететь до Луны в математике'})
-                });
-            } else {
-                alert(`⛽ Топливо закончилось!\nПравильных ответов: ${correct}\nПолучено: ${Math.floor(correct/2)} звёзд!`);
+            // Сбрасываем ракету
+            const rocketContainer = document.getElementById('rocketContainer');
+            rocketContainer.style.bottom = '30px';
+            const rocket = document.getElementById('rocket');
+            rocket.classList.remove('rocket-launch');
 
-                // Награда за игру
-                fetch('/add_star', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({count: Math.floor(correct/2), reason: 'Участие в космическом счёте'})
-                });
-            }
+            // Сбрасываем звезды на пути
+            updateSpaceStars();
 
-            resetGame();
-        }
-
-        function addStar() {
-            fetch('/add_star', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({count: 1, reason: 'Правильный математический ответ'})
+            // Сбрасываем достижения (кроме разблокированных сохраняем)
+            const achievements = document.querySelectorAll('.achievement');
+            achievements.forEach(ach => {
+                if (!ach.id.includes('achieve')) return;
+                ach.classList.remove('unlocked');
             });
+
+            // Обновляем отображение
+            updateDisplay();
+
+            // Генерируем первый пример
+            generateProblem();
+
+            // Скрываем сообщения
+            closeMessage('winMessage');
+            closeMessage('loseMessage');
+
+            // Фокусируемся на поле ввода
+            document.getElementById('answerInput').focus();
         }
 
-        // Запускаем игру при загрузке
-        document.addEventListener('DOMContentLoaded', () => {
-            resetGame();
-        });
+        // ========== ЗАПУСК ИГРЫ ==========
+        document.addEventListener('DOMContentLoaded', initGame);
     </script>
-
 </body>
 </html>

@@ -4,21 +4,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎨 Космические раскраски</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* ОСНОВНЫЕ СТИЛИ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* КНОПКА НАЗАД */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #ff0066, #ff5500);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(255, 0, 102, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(255, 0, 102, 0.5);
+        }
+
+        /* ОСНОВНОЙ КОНТЕЙНЕР */
         .gallery-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 30px;
+            padding: 30px 20px;
+        }
+
+        /* ЗАГОЛОВОК */
+        .gallery-header {
+            text-align: center;
+            margin: 80px 0 40px;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 30px;
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            animation: headerGlow 2s infinite alternate;
+        }
+
+        @keyframes headerGlow {
+            0% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.3); }
+            100% { box-shadow: 0 0 40px rgba(0, 255, 255, 0.5); }
+        }
+
+        .gallery-title {
+            font-size: 3.5rem;
+            color: #ffff00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px yellow, 0 0 30px orange;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .gallery-subtitle {
+            color: #00ffff;
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* КАТЕГОРИИ */
+        .category-section {
+            margin: 40px 0;
+        }
+
+        .category-title {
+            color: #00ffaa;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .category-tabs {
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 30px 0;
             flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
         }
 
         .category-tab {
@@ -33,66 +144,131 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            font-weight: bold;
         }
 
-        .category-tab:hover,
+        .category-tab:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
         .category-tab.active {
             background: #00ffff;
             color: black;
-            transform: translateY(-5px);
+            border-color: #00ffff;
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
         }
 
+        /* СЕТКА ИЗОБРАЖЕНИЙ */
         .images-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
         }
 
+        @media (max-width: 768px) {
+            .images-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .images-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* КАРТОЧКА ИЗОБРАЖЕНИЯ */
         .image-card {
-            background: linear-gradient(135deg, #2a2a5a, #3a3a7a);
-            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(42, 42, 90, 0.8), rgba(58, 58, 122, 0.8));
+            border-radius: 25px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.4s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 3px solid transparent;
             position: relative;
+            backdrop-filter: blur(10px);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .image-card:hover {
-            transform: translateY(-10px) scale(1.03);
+            transform: translateY(-10px) scale(1.05);
             border-color: #ff00ff;
-            box-shadow: 0 20px 40px rgba(255, 0, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(255, 0, 255, 0.4);
+        }
+
+        .image-preview-container {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid #00ffff;
+            flex-shrink: 0;
         }
 
         .image-preview {
             width: 100%;
-            height: 200px;
+            height: 100%;
             object-fit: cover;
-            border-bottom: 3px solid #00ffff;
+            transition: transform 0.5s;
+        }
+
+        .image-card:hover .image-preview {
+            transform: scale(1.1);
+        }
+
+        .image-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #ffff00;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(5px);
         }
 
         .image-info {
             padding: 20px;
-            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .image-name {
             color: #ffff00;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             margin-bottom: 10px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+            line-height: 1.3;
+            min-height: 2.6em;
+        }
+
+        .image-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
         }
 
         .image-category {
             color: #00ffaa;
             font-size: 0.9rem;
             background: rgba(0, 255, 170, 0.1);
-            padding: 5px 15px;
+            padding: 5px 12px;
             border-radius: 15px;
-            display: inline-block;
         }
 
-        .start-coloring-btn {
+        /* КНОПКА РАСКРАСКИ */
+        .coloring-btn {
             position: absolute;
             bottom: 20px;
             right: 20px;
@@ -100,167 +276,321 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 1.5rem;
+            width: 60px;
+            height: 60px;
+            font-size: 1.8rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 0, 255, 0.3);
         }
 
-        .image-card:hover .start-coloring-btn {
+        .image-card:hover .coloring-btn {
             opacity: 1;
+            transform: scale(1.1);
         }
 
-        .back-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 15px 25px;
-            background: linear-gradient(45deg, #ff0066, #ff5500);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .coloring-btn:hover {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.5);
         }
 
+        /* СООБЩЕНИЯ */
         .no-images {
             text-align: center;
-            padding: 50px;
+            padding: 60px;
             color: #aaa;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 2px dashed #00ffff;
+        }
+
+        .no-images i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #00ffff;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 60px;
+            color: #aaa;
+            font-size: 1.3rem;
             grid-column: 1 / -1;
         }
 
-        /* Индикатор загрузки */
-        .loading-indicator {
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(0, 255, 255, 0.3);
+            border-top-color: #00ffff;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ИНФОРМАЦИЯ О СТАРТАХ */
+        .stars-info {
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 30px 0;
+            border: 2px solid gold;
             text-align: center;
-            padding: 50px;
-            color: #aaa;
-            font-size: 1.2rem;
-            grid-column: 1 / -1;
+        }
+
+        .stars-info h3 {
+            color: gold;
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+        }
+
+        .stars-info p {
+            color: #ffdd00;
+            font-size: 1.1rem;
+        }
+
+        /* АДАПТИВНОСТЬ */
+        @media (max-width: 768px) {
+            .gallery-header {
+                margin: 60px 0 30px;
+                padding: 30px 20px;
+            }
+
+            .gallery-title {
+                font-size: 2.5rem;
+            }
+
+            .gallery-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .category-tabs {
+                justify-content: center;
+            }
+
+            .image-preview-container {
+                height: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery-title {
+                font-size: 2rem;
+            }
+
+            .category-tab {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .back-button {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+        }
+
+        /* АНИМАЦИЯ ПРИ НАВЕДЕНИИ НА КНОПКУ */
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 255, 0); }
         }
     </style>
 </head>
-<body class="kid-mode">
+<body class="coloring-gallery">
+    <!-- ЗВЕЗДНОЕ ПОЛЕ -->
     <div class="starfield"></div>
 
-    <button class="back-button" onclick="window.location.href='/games'">
-        <i class="fas fa-arrow-left"></i> Назад к играм
+    <!-- КНОПКА НАЗАД -->
+    <button class="back-button" onclick="window.location.href='/games'" title="Вернуться к выбору игр">
+        <i class="fas fa-arrow-left"></i> К ИГРАМ
     </button>
 
-    <div class="container">
-        <header class="header" style="margin-top: 60px;">
-            <h1 class="main-title">🎨 КОСМИЧЕСКИЕ РАСКРАСКИ</h1>
-            <p class="subtitle">Выбери картинку и раскрась её! 🌈</p>
-        </header>
+    <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
+    <div class="gallery-container">
+        <!-- ЗАГОЛОВОК -->
+        <div class="gallery-header">
+            <h1 class="gallery-title">🎨 КОСМИЧЕСКИЕ РАСКРАСКИ</h1>
+            <div class="gallery-subtitle">
+                Выбери картинку, раскрась её в своём стиле и получи звёзды! 🌈✨
+                Сохрани или распечатай свой шедевр!
+            </div>
+        </div>
 
-        <div class="gallery-container">
-            <!-- Категории -->
+        <!-- ИНФОРМАЦИЯ О НАГРАДАХ -->
+        <div class="stars-info">
+            <h3><i class="fas fa-star"></i> ПОЛУЧАЙ ЗВЁЗДЫ ЗА ТВОРЧЕСТВО!</h3>
+            <p>⭐ +3 звезды за каждую сохранённую раскраску</p>
+            <p>⭐ +5 звёзд за первую раскраску</p>
+            <p>⭐ +10 звёзд за 5 разных раскрасок</p>
+        </div>
+
+        <!-- СЕКЦИЯ КАТЕГОРИЙ -->
+        <div class="category-section">
+            <h2 class="category-title">
+                <i class="fas fa-layer-group"></i>
+                КАТЕГОРИИ РАСКРАСОК
+            </h2>
+
+            <!-- КАТЕГОРИИ -->
             <div class="category-tabs" id="category-tabs">
-                <!-- Динамически загружаются через JavaScript -->
-                <div class="loading-indicator" id="loading-categories">
-                    Загружаем категории...
+                <div class="loading-indicator">
+                    <div class="loading-spinner"></div>
+                    <div>Загружаем категории...</div>
                 </div>
             </div>
+        </div>
 
-            <!-- Сетка изображений -->
-            <div class="images-grid" id="images-grid">
-                <!-- Динамически загружаются через JavaScript -->
-                <div class="loading-indicator" id="loading-images">
-                    Загружаем раскраски...
-                </div>
+        <!-- СЕТКА ИЗОБРАЖЕНИЙ -->
+        <div class="images-grid" id="images-grid">
+            <div class="loading-indicator">
+                <div class="loading-spinner"></div>
+                <div>Загружаем раскраски...</div>
             </div>
         </div>
     </div>
 
     <script>
+        // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
         let allImages = [];
         let currentCategory = 'all';
+        let userStats = {
+            totalColored: 0,
+            starsEarned: 0,
+            firstTime: true
+        };
 
-        // Загружаем изображения
+        // ========== ЗАГРУЗКА ИЗОБРАЖЕНИЙ ==========
         async function loadColoringImages() {
-            console.log('Начинаем загрузку изображений...');
+            console.log('🔄 Начинаем загрузку изображений раскрасок...');
 
             try {
-                document.getElementById('loading-categories').style.display = 'block';
-                document.getElementById('loading-images').style.display = 'block';
+                // Показываем индикаторы загрузки
+                showLoading(true);
 
+                // Загружаем данные с сервера
                 const response = await fetch('/get_coloring_images');
+
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`Ошибка сервера: ${response.status}`);
                 }
 
                 const categories = await response.json();
-                console.log('Получены категории:', categories);
+                console.log('✅ Получены категории:', categories);
 
                 allImages = categories;
-                document.getElementById('loading-categories').style.display = 'none';
-                document.getElementById('loading-images').style.display = 'none';
 
+                // Загружаем статистику пользователя
+                loadUserStats();
+
+                // Рендерим интерфейс
                 renderCategoryTabs();
                 renderImages();
 
-            } catch (error) {
-                console.error('Ошибка загрузки изображений:', error);
-                document.getElementById('loading-categories').style.display = 'none';
-                document.getElementById('loading-images').style.display = 'none';
+                // Показываем приветствие для новых пользователей
+                if (userStats.firstTime) {
+                    setTimeout(() => {
+                        showWelcomeMessage();
+                    }, 1000);
+                }
 
-                document.getElementById('images-grid').innerHTML = `
-                    <div class="no-images">
-                        <div style="font-size: 4rem; margin-bottom: 20px;">😢</div>
-                        <p>Не удалось загрузить раскраски.</p>
-                        <p>Ошибка: ${error.message}</p>
-                        <button onclick="loadColoringImages()"
-                                style="margin-top: 20px; padding: 10px 20px; background: #00ffff; color: black; border: none; border-radius: 10px; cursor: pointer;">
-                            Попробовать снова
-                        </button>
-                    </div>
-                `;
+            } catch (error) {
+                console.error('❌ Ошибка загрузки изображений:', error);
+                showError(error.message);
+            } finally {
+                showLoading(false);
             }
         }
 
-        // Рендерим категории
+        // ========== ЗАГРУЗКА СТАТИСТИКИ ПОЛЬЗОВАТЕЛЯ ==========
+        function loadUserStats() {
+            const savedStats = localStorage.getItem('coloringStats');
+            if (savedStats) {
+                userStats = JSON.parse(savedStats);
+                userStats.firstTime = false;
+            }
+        }
+
+        // ========== СОХРАНЕНИЕ СТАТИСТИКИ ==========
+        function saveUserStats() {
+            localStorage.setItem('coloringStats', JSON.stringify(userStats));
+        }
+
+        // ========== ПРИВЕТСТВЕННОЕ СООБЩЕНИЕ ==========
+        function showWelcomeMessage() {
+            showNotification('🎨 Добро пожаловать в мир раскрасок!<br>Выбирай картинку и начинай творить! ✨');
+        }
+
+        // ========== РЕНДЕРИНГ КАТЕГОРИЙ ==========
         function renderCategoryTabs() {
             const tabsContainer = document.getElementById('category-tabs');
 
             if (!allImages || allImages.length === 0) {
-                tabsContainer.innerHTML = '<p style="color: #aaa; text-align: center; width: 100%;">Нет категорий</p>';
+                tabsContainer.innerHTML = `
+                    <div style="color: #aaa; text-align: center; width: 100%; padding: 20px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Нет доступных категорий</p>
+                    </div>
+                `;
                 return;
             }
 
             // Кнопка "Все"
             let html = `
                 <div class="category-tab ${currentCategory === 'all' ? 'active' : ''}"
-                     onclick="filterByCategory('all')">
-                    <span>🎨</span>
-                    <span>Все раскраски</span>
+                     onclick="filterByCategory('all')"
+                     title="Показать все раскраски">
+                    <i class="fas fa-star"></i>
+                    <span>Все раскраски (${countAllImages()})</span>
                 </div>
             `;
 
             // Кнопки категорий
             allImages.forEach(category => {
-                html += `
-                    <div class="category-tab ${currentCategory === category.category ? 'active' : ''}"
-                         onclick="filterByCategory('${category.category}')">
-                        <span>${category.emoji}</span>
-                        <span>${category.name}</span>
-                    </div>
-                `;
+                const imageCount = category.images ? category.images.length : 0;
+                if (imageCount > 0) {
+                    html += `
+                        <div class="category-tab ${currentCategory === category.category ? 'active' : ''}"
+                             onclick="filterByCategory('${category.category}')"
+                             title="${category.description || category.name}">
+                            ${category.emoji || '🎨'}
+                            <span>${category.name} (${imageCount})</span>
+                        </div>
+                    `;
+                }
             });
 
             tabsContainer.innerHTML = html;
         }
 
-        // Рендерим изображения
+        // ========== ПОДСЧЁТ ВСЕХ ИЗОБРАЖЕНИЙ ==========
+        function countAllImages() {
+            if (!allImages || allImages.length === 0) return 0;
+
+            let total = 0;
+            allImages.forEach(category => {
+                if (category.images && category.images.length) {
+                    total += category.images.length;
+                }
+            });
+            return total;
+        }
+
+        // ========== РЕНДЕРИНГ ИЗОБРАЖЕНИЙ ==========
         function renderImages() {
             const gridContainer = document.getElementById('images-grid');
 
@@ -270,23 +600,34 @@
                 // Показываем все изображения из всех категорий
                 allImages.forEach(category => {
                     if (category.images && category.images.length > 0) {
-                        imagesToShow.push(...category.images);
+                        category.images.forEach(img => {
+                            imagesToShow.push({
+                                ...img,
+                                categoryInfo: category
+                            });
+                        });
                     }
                 });
             } else {
                 // Показываем только выбранную категорию
                 const category = allImages.find(cat => cat.category === currentCategory);
                 if (category && category.images) {
-                    imagesToShow = category.images;
+                    imagesToShow = category.images.map(img => ({
+                        ...img,
+                        categoryInfo: category
+                    }));
                 }
             }
+
+            // Сортируем по имени
+            imagesToShow.sort((a, b) => a.name.localeCompare(b.name));
 
             if (imagesToShow.length === 0) {
                 gridContainer.innerHTML = `
                     <div class="no-images">
-                        <div style="font-size: 4rem; margin-bottom: 20px;">🎨</div>
-                        <p>Нет раскрасок в этой категории.</p>
-                        <p>Выберите другую категорию.</p>
+                        <i class="fas fa-paint-brush"></i>
+                        <p>В этой категории пока нет раскрасок.</p>
+                        <p>Выберите другую категорию или загрузите новые изображения.</p>
                     </div>
                 `;
                 return;
@@ -294,24 +635,37 @@
 
             let html = '';
 
-            imagesToShow.forEach(image => {
-                console.log('Обрабатываем изображение:', image);
-                const category = allImages.find(cat => cat.category === image.category);
-                const categoryName = category ? category.name : image.category;
+            imagesToShow.forEach((image, index) => {
+                const category = image.categoryInfo;
 
                 html += `
-                    <div class="image-card" onclick="startColoring('${image.path}', '${image.name}')">
-                        <img src="${image.path}"
-                             alt="${image.name}"
-                             class="image-preview"
-                             loading="lazy"
-                             onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"250\" height=\"200\" viewBox=\"0 0 250 200\"><rect width=\"100%\" height=\"100%\" fill=\"%23222\"/><text x=\"50%\" y=\"50%\" text-anchor=\"middle\" dy=\".3em\" fill=\"%23fff\" font-family=\"Arial\">🎨 ${image.name}</text></svg>'">
+                    <div class="image-card" onclick="selectColoring('${image.path}', '${image.name}', '${category.category}')"
+                         title="Кликните чтобы начать раскраску '${image.name}'">
+                        <div class="image-preview-container">
+                            <img src="${image.path}"
+                                 alt="${image.name}"
+                                 class="image-preview"
+                                 loading="lazy"
+                                 onerror="handleImageError(this, '${image.name}')">
+
+                            <div class="image-badge">
+                                ${category.emoji || '🎨'}
+                                <span>${category.name}</span>
+                            </div>
+                        </div>
+
                         <div class="image-info">
                             <div class="image-name">${image.name}</div>
-                            <div class="image-category">${categoryName}</div>
+
+                            <div class="image-details">
+                                <span class="image-category">${category.name}</span>
+                            </div>
                         </div>
-                        <button class="start-coloring-btn" onclick="event.stopPropagation(); startColoring('${image.path}', '${image.name}')">
-                            🎨
+
+                        <button class="coloring-btn pulse-animation"
+                                onclick="event.stopPropagation(); selectColoring('${image.path}', '${image.name}', '${category.category}')"
+                                title="Начать раскраску">
+                            <i class="fas fa-paint-brush"></i>
                         </button>
                     </div>
                 `;
@@ -320,68 +674,215 @@
             gridContainer.innerHTML = html;
         }
 
-        // Фильтруем по категории
+        // ========== ОБРАБОТКА ОШИБОК ИЗОБРАЖЕНИЙ ==========
+        function handleImageError(img, imageName) {
+            console.log(`🖼️ Изображение не загрузилось: ${imageName}`);
+
+            // Заменяем на SVG placeholder
+            img.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="250" viewBox="0 0 300 250">
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:%232a2a5a;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:%233a3a7a;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect width="300" height="250" fill="url(%23grad1)"/>
+                <text x="150" y="120" text-anchor="middle" fill="white" font-family="Arial" font-size="16">${imageName}</text>
+                <text x="150" y="150" text-anchor="middle" fill="%2300ffff" font-family="Arial" font-size="12">Раскраска</text>
+            </svg>`;
+
+            img.onerror = null; // Предотвращаем бесконечный цикл
+        }
+
+        // ========== ФИЛЬТРАЦИЯ ПО КАТЕГОРИИ ==========
         function filterByCategory(category) {
-            console.log('Фильтруем по категории:', category);
+            console.log(`📁 Фильтруем по категории: ${category}`);
             currentCategory = category;
             renderCategoryTabs();
             renderImages();
+
+            // Плавная прокрутка к сетке изображений
+            setTimeout(() => {
+                document.getElementById('images-grid').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
         }
 
-        // Запускаем раскраску
-        function startColoring(imagePath, imageName) {
-            console.log('Запускаем раскраску:', imagePath, imageName);
+        // ========== ВЫБОР РАСКРАСКИ ==========
+        function selectColoring(imagePath, imageName, category) {
+            console.log(`🎨 Выбрана раскраска: ${imageName}`);
 
             // Проверяем корректность пути
-            if (!imagePath || !imagePath.startsWith('/static/coloring/')) {
-                alert('Ошибка: неправильный путь к изображению');
-                console.error('Неправильный путь:', imagePath);
+            if (!imagePath || !imagePath.startsWith('/static/')) {
+                console.error('❌ Неправильный путь к изображению:', imagePath);
+                showNotification('Ошибка: неправильный путь к изображению', 'error');
                 return;
             }
 
-            // Сохраняем выбранную картинку в localStorage
-            localStorage.setItem('selectedColoring', JSON.stringify({
-                path: imagePath,
-                name: imageName
-            }));
-
-            // Переходим на страницу раскраски
-            window.location.href = '/coloring_page';
+            // Проверяем, доступно ли изображение
+            const img = new Image();
+            img.onload = () => {
+                console.log('✅ Изображение доступно для загрузки');
+                prepareColoringSession(imagePath, imageName, category);
+            };
+            img.onerror = () => {
+                console.error('❌ Изображение не найдено по пути:', imagePath);
+                showNotification('Изображение не найдено. Пожалуйста, выберите другую раскраску.', 'error');
+            };
+            img.src = imagePath;
         }
 
-        // Создаем звездное поле
+        // ========== ПОДГОТОВКА СЕССИИ РАСКРАСКИ ==========
+        function prepareColoringSession(imagePath, imageName, category) {
+            // Сохраняем информацию о выбранной раскраске
+            const coloringData = {
+                path: imagePath,
+                name: imageName,
+                category: category,
+                timestamp: new Date().toISOString(),
+                sessionId: Date.now()
+            };
+
+            localStorage.setItem('selectedColoring', JSON.stringify(coloringData));
+
+            // Обновляем статистику
+            userStats.totalColored++;
+            saveUserStats();
+
+            // Показываем сообщение
+            showNotification(`🎨 Загружаем раскраску: ${imageName}`, 'success');
+
+            // Небольшая задержка для анимации
+            setTimeout(() => {
+                window.location.href = '/coloring_page';
+            }, 800);
+        }
+
+        // ========== УПРАВЛЕНИЕ ЗАГРУЗКОЙ ==========
+        function showLoading(isLoading) {
+            const loadingElements = document.querySelectorAll('.loading-indicator');
+            loadingElements.forEach(el => {
+                el.style.display = isLoading ? 'block' : 'none';
+            });
+        }
+
+        // ========== ПОКАЗАТЬ УВЕДОМЛЕНИЕ ==========
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'error' ? '#ff4444' :
+                           type === 'success' ? '#00cc66' :
+                           'rgba(0, 0, 0, 0.9)';
+
+            notification.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 100px;
+                    right: 20px;
+                    background: ${bgColor};
+                    color: white;
+                    padding: 20px;
+                    border-radius: 15px;
+                    border-left: 5px solid gold;
+                    max-width: 350px;
+                    z-index: 10000;
+                    animation: slideIn 0.3s, slideOut 0.3s 2.7s;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+                ">
+                    <div style="font-size: 1.1rem; margin-bottom: 5px;">
+                        ${type === 'error' ? '❌' : type === 'success' ? '✅' : '💫'}
+                        ${message}
+                    </div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">
+                        ${new Date().toLocaleTimeString()}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // ========== ПОКАЗАТЬ ОШИБКУ ==========
+        function showError(errorMessage) {
+            const gridContainer = document.getElementById('images-grid');
+            gridContainer.innerHTML = `
+                <div class="no-images">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff4444;"></i>
+                    <p>Не удалось загрузить раскраски.</p>
+                    <p style="font-size: 0.9rem; color: #ff8888; margin-top: 10px;">
+                        ${errorMessage}
+                    </p>
+                    <button onclick="loadColoringImages()"
+                            style="margin-top: 20px; padding: 12px 25px;
+                                   background: linear-gradient(45deg, #00ffff, #0088ff);
+                                   color: black; border: none; border-radius: 15px;
+                                   cursor: pointer; font-weight: bold;">
+                        <i class="fas fa-redo"></i> Попробовать снова
+                    </button>
+                </div>
+            `;
+        }
+
+        // ========== СОЗДАНИЕ ЗВЕЗДНОГО ПОЛЯ ==========
         function createStarfield() {
             const starfield = document.querySelector('.starfield');
-            for (let i = 0; i < 150; i++) {
+            starfield.innerHTML = '';
+
+            for (let i = 0; i < 200; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
                 star.style.cssText = `
-                    position: absolute;
                     width: ${Math.random() * 3 + 1}px;
                     height: ${Math.random() * 3 + 1}px;
-                    background: white;
-                    border-radius: 50%;
                     left: ${Math.random() * 100}%;
                     top: ${Math.random() * 100}%;
-                    animation: twinkle ${Math.random() * 3 + 2}s infinite;
-                    animation-delay: ${Math.random() * 3}s;
+                    opacity: ${Math.random() * 0.5 + 0.2};
+                    animation-duration: ${Math.random() * 3 + 2}s;
+                    animation-delay: ${Math.random() * 5}s;
                 `;
                 starfield.appendChild(star);
             }
         }
 
-        // Загружаем при загрузке страницы
+        // ========== ЗАГРУЗКА ПРИ СТАРТЕ ==========
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('Страница галереи загружена');
+            console.log('🚀 Галерея раскрасок загружена');
+
+            // Создаем звездное поле
             createStarfield();
+
+            // Загружаем изображения
             loadColoringImages();
 
-            // Для отладки
-            setTimeout(() => {
-                if (allImages.length === 0) {
-                    console.log('Нет изображений, проверяем структуру папок...');
+            // Добавляем CSS анимации
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
                 }
-            }, 1000);
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Фокус на кнопке "Все" для удобства
+            setTimeout(() => {
+                const allTab = document.querySelector('.category-tab[title*="Все раскраски"]');
+                if (allTab) {
+                    allTab.focus();
+                }
+            }, 500);
         });
     </script>
 </body>

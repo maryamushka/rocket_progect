@@ -192,7 +192,6 @@ ALL_MISSIONS = [
             "📊 Рекордсмен: побил рекорд дальности полёта!"
         ]
     },
-    # Дополнительные миссии для полноты базы
     {
         "id": 9,
         "name": "Juice к Юпитеру",
@@ -351,10 +350,9 @@ def index():
     upcoming = [m for m in ALL_MISSIONS if m['status'] == 'предстоящий'][:3]
 
     return render_template('index_kid.html',
-                           launches=upcoming,
-                           all_missions=ALL_MISSIONS[:8],
+                           launches=upcoming,  # 3 ближайшие миссии
+                           all_missions=ALL_MISSIONS,  # ВСЕ миссии (убрали [:8])
                            user_stars=stars)
-
 
 @app.route('/mission/<int:mission_id>')
 def mission_detail(mission_id):

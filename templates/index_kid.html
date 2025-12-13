@@ -155,17 +155,17 @@
                         Нажми на любую часть ракеты, чтобы узнать о ней!
                     </p>
                     <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
-                        <button onclick="showPartInfo('engine')" class="part-btn" style="background: linear-gradient(45deg, #ff4444, #ff0000);">
-                            <span style="font-size: 1.5rem;">🔥</span><br>Двигатель
+                        <button onclick="showPartInfo('engine')" class="part-btn">
+                            <span class="part-emoji">🔥</span><br>Двигатель
                         </button>
-                        <button onclick="showPartInfo('tank')" class="part-btn" style="background: linear-gradient(45deg, #44ff44, #00aa00);">
-                            <span style="font-size: 1.5rem;">⛽</span><br>Баки
+                        <button onclick="showPartInfo('tank')" class="part-btn">
+                            <span class="part-emoji">⛽</span><br>Баки
                         </button>
-                        <button onclick="showPartInfo('payload')" class="part-btn" style="background: linear-gradient(45deg, #4444ff, #0000ff);">
-                            <span style="font-size: 1.5rem;">🛰️</span><br>Нагрузка
+                        <button onclick="showPartInfo('payload')" class="part-btn">
+                            <span class="part-emoji">🛰️</span><br>Нагрузка
                         </button>
-                        <button onclick="showPartInfo('escape')" class="part-btn" style="background: linear-gradient(45deg, #ffff44, #ffaa00);">
-                            <span style="font-size: 1.5rem;">🆘</span><br>Спасение
+                        <button onclick="showPartInfo('escape')" class="part-btn">
+                            <span class="part-emoji">🆘</span><br>Спасение
                         </button>
                     </div>
                 </div>
@@ -265,7 +265,7 @@
             </p>
 
             <div class="mission-filters">
-                <button class="filter-btn active" onclick="filterMissions('all')">Все миссии</button>
+                <button class="filter-btn active" onclick="filterMissions('all')">Все миссии (12)</button>
                 <button class="filter-btn" onclick="filterMissions('upcoming')">Предстоящие</button>
                 <button class="filter-btn" onclick="filterMissions('completed')">Завершённые</button>
                 <button class="filter-btn" onclick="filterMissions('spacex')">SpaceX</button>
@@ -279,38 +279,84 @@
                 </div>
             </div>
 
-            <div class="mission-cards">
-                {% for launch in launches %}
-                <div class="mission-card" onclick="showMissionDetail({{ launch.id }})" data-status="{{ launch.status }}" data-company="{{ launch.company|lower }}">
+            <div class="mission-cards" id="mission-cards">
+                {% for mission in all_missions %}
+                <div class="mission-card"
+                     onclick="showMissionDetail({{ mission.id }})"
+                     data-status="{{ mission.status }}"
+                     data-company="{{ mission.company|lower }}"
+                     data-name="{{ mission.name|lower }}"
+                     data-id="{{ mission.id }}">
+
+                    <!-- Бейдж "Новое" для последних миссий -->
+                    {% if loop.index <= 3 %}
+                    <div class="new-badge" style="animation-delay: {{ loop.index * 0.2 }}s">
+                        ✨ Новое!
+                    </div>
+                    {% endif %}
+
                     <!-- Звёзды за миссию -->
-                    <div class="mission-stars">+2</div>
+                    <div class="mission-stars">
+                        {% if mission.difficulty == 'простой' %}
+                        +1
+                        {% elif mission.difficulty == 'средний' %}
+                        +2
+                        {% else %}
+                        +3
+                        {% endif %}
+                    </div>
 
                     <!-- Эмодзи миссии -->
-                    <div class="mission-emoji">{{ launch.emoji or '🚀' }}</div>
+                    <div class="mission-emoji">{{ mission.emoji or '🚀' }}</div>
 
                     <!-- Название миссии -->
-                    <h3 class="mission-name">{{ launch.name }}</h3>
+                    <h3 class="mission-name">{{ mission.name }}</h3>
 
                     <!-- Дата и статус -->
                     <div class="mission-date-container">
-                        <div class="mission-date">📅 {{ launch.date }} {{ launch.time or '' }}</div>
-                        <div class="status-badge {{ launch.status }}">
-                            {{ launch.status }}
+                        <div class="mission-date">📅 {{ mission.date }} {{ mission.time or '' }}</div>
+                        <div class="status-badge {{ mission.status }}">
+                            {{ mission.status }}
                         </div>
                     </div>
 
-                    <!-- Интересный факт -->
-                    <p class="mission-fact">{{ launch.fun_fact }}</p>
+                    <!-- КАРУСЕЛЬ ФАКТОВ (новое!) -->
+                    <div class="mission-fact-carousel" id="facts-carousel-{{ mission.id }}">
+                        {% if mission.kid_facts and mission.kid_facts|length > 0 %}
+                            {% for fact in mission.kid_facts[:3] %}
+                            <div class="fact-item {% if loop.first %}active{% endif %}"
+                                 data-index="{{ loop.index0 }}">
+                                {{ fact }}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Если фактов нет, показываем основной факт -->
+                            <div class="fact-item active">
+                                {{ mission.fun_fact }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Навигация для фактов -->
+                    {% if mission.kid_facts and mission.kid_facts|length > 1 %}
+                    <div class="fact-dots">
+                        {% for i in range([mission.kid_facts|length, 3]|min) %}
+                        <div class="fact-dot {% if loop.first %}active{% endif %}"
+                             onclick="showFactInCard({{ mission.id }}, {{ loop.index0 }}); event.stopPropagation();">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
 
                     <!-- Индикатор сложности -->
                     <div class="difficulty-indicator">
                         {% set difficulty_level = {'простой': 1, 'средний': 2, 'сложный': 3} %}
-                        {% set level = difficulty_level.get(launch.difficulty, 2) %}
+                        {% set level = difficulty_level.get(mission.difficulty, 2) %}
                         {% for i in range(3) %}
                         <div class="difficulty-dot {{ 'active' if i < level else '' }}"></div>
                         {% endfor %}
                         <span style="color: #aaa; font-size: 0.9rem; margin-left: 10px;">
-                            {{ launch.difficulty or 'средний' }}
+                            {{ mission.difficulty or 'средний' }}
                         </span>
                     </div>
 
@@ -318,12 +364,13 @@
                     <div class="mission-footer">
                         <div class="rocket-badge">
                             <i class="fas fa-rocket"></i>
-                            {{ launch.rocket }}
+                            {{ mission.rocket }}
                         </div>
                         <div class="company-badge">
-                            🏢 {{ launch.company }}
+                            🏢 {{ mission.company }}
                         </div>
                     </div>
+
                 </div>
                 {% endfor %}
             </div>
@@ -429,6 +476,80 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Фильтрация миссий
+        function filterMissions(filter) {
+            // Обновляем активную кнопку
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            const cards = document.querySelectorAll('.mission-card');
+            cards.forEach(card => {
+                const status = card.dataset.status;
+                const company = card.dataset.company;
+                let show = false;
+
+                switch(filter) {
+                    case 'all':
+                        show = true;
+                        break;
+                    case 'upcoming':
+                        show = status === 'предстоящий';
+                        break;
+                    case 'completed':
+                        show = status === 'завершён';
+                        break;
+                    case 'spacex':
+                        show = company.includes('spacex');
+                        break;
+                    case 'roscosmos':
+                        show = company.includes('роскосмос');
+                        break;
+                    case 'nasa':
+                        show = company.includes('nasa');
+                        break;
+                    default:
+                        show = true;
+                }
+
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // Поиск миссий
+        function searchMissions() {
+            const searchTerm = document.getElementById('mission-search').value.toLowerCase();
+            const cards = document.querySelectorAll('.mission-card');
+
+            cards.forEach(card => {
+                const missionName = card.dataset.name;
+                if (missionName.includes(searchTerm) || searchTerm === '') {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('mission-search').value = '';
+            searchMissions();
+        }
+
+        // КОРРЕКТНОЕ ПЕРЕНАПРАВЛЕНИЕ НА СТРАНИЦУ МИССИИ
+        function redirectToMission(missionId, event) {
+            // Отменяем всплытие события, если нужно
+            if (event) {
+                event.stopPropagation();
+            }
+
+            // Простое перенаправление
+            window.location.href = `/mission/${missionId}`;
+        }
+    </script>
 
 </body>
 </html>
