@@ -608,6 +608,239 @@ def planets_puzzle():
 def space_math():
     return render_template('space_math.html')
 
+
+# Настройки режимов
+ADULT_MISSIONS = [
+    {
+        "id": 101,
+        "name": "Starship IFT-4",
+        "date": "2023-12-15",
+        "time": "15:00 МСК",
+        "rocket": "Starship Super Heavy",
+        "company": "SpaceX",
+        "status": "upcoming",
+        "description": "Четвертый интегрированный летный тест Starship. Тестирование системы многоразового использования, включая горячую перезаправку на орбите и контролируемый вход в атмосферу.",
+        "technical_details": {
+            "height": "121 m",
+            "diameter": "9 m",
+            "mass": "5,000 t",
+            "payload": "150 t (LEO)",
+            "engines": "33 Raptor-2 (1st stage), 6 Raptor-2 (2nd stage)",
+            "thrust": "7,590 tf (sea level)"
+        },
+        "mission_goals": [
+            "Достижение орбитальной скорости",
+            "Испытание системы перелива топлива",
+            "Контролируемый вход в атмосферу",
+            "Точная посадка в Индийском океане"
+        ],
+        "stream_url": "https://www.youtube.com/embed/spacex",
+        "image": "starship_adult.png",
+        "category": "orbital_test",
+        "success_probability": "65%",
+        "budget": "Не разглашается",
+        "previous_results": [
+            "IFT-1: Частичный успех, разрушение на 237 секунде",
+            "IFT-2: Успешное разделение ступеней",
+            "IFT-3: Первый орбитальный полет Starship"
+        ]
+    },
+    {
+        "id": 102,
+        "name": "Artemis II",
+        "date": "2024-11",
+        "time": "TBD",
+        "rocket": "SLS Block 1",
+        "company": "NASA",
+        "status": "planned",
+        "description": "Первый пилотируемый облет Луны в рамках программы Artemis. Экипаж из 4 астронавтов проведет 10-дневную миссию с возвращением на Землю.",
+        "technical_details": {
+            "height": "98 m",
+            "diameter": "8.4 m",
+            "mass": "2,600 t",
+            "payload": "95 t (TLI)",
+            "engines": "4 RS-25D",
+            "thrust": "3,992 tf"
+        },
+        "mission_goals": [
+            "Проверка систем корабля Orion в пилотируемом режиме",
+            "Тестирование систем жизнеобеспечения",
+            "Калибровка научного оборудования",
+            "Подготовка к высадке на Луну"
+        ],
+        "crew": [
+            {"name": "Рид Уайзман", "role": "Командир"},
+            {"name": "Виктор Гловер", "role": "Пилот"},
+            {"name": "Кристина Кох", "role": "Специалист"},
+            {"name": "Джереми Хансен", "role": "Специалист"}
+        ],
+        "image": "artemis_adult.png",
+        "category": "manned",
+        "success_probability": "85%",
+        "budget": "$4.1 млрд"
+    }
+]
+
+# Фильтры для взрослого режима
+ADULT_FILTERS = {
+    "status": ["upcoming", "in_progress", "completed", "failed", "planned"],
+    "company": ["SpaceX", "NASA", "Роскосмос", "ESA", "ISRO", "CNSA", "ULA", "Blue Origin"],
+    "category": ["orbital_test", "manned", "cargo", "scientific", "commercial", "lunar", "martian"],
+    "rocket": ["Starship", "Falcon 9", "Falcon Heavy", "SLS", "Союз-2", "Ariane 5", "New Glenn", "Vulcan"]
+}
+
+# Статистика запусков
+LAUNCH_STATS = {
+    "total_2023": 223,
+    "successful": 210,
+    "failed": 13,
+    "success_rate": "94.2%",
+    "by_country": {
+        "USA": 108,
+        "Китай": 67,
+        "Россия": 19,
+        "Европа": 9,
+        "Индия": 7,
+        "Другие": 13
+    },
+    "by_type": {
+        "Starlink": 98,
+        "Космическая станция": 15,
+        "Научные": 22,
+        "Коммерческие": 88
+    }
+}
+
+
+@app.route('/adult_mode')
+def adult_mode():
+    """Режим для взрослых с расширенной информацией"""
+    return render_template('adult_mode.html',
+                           missions=ADULT_MISSIONS,
+                           filters=ADULT_FILTERS,
+                           stats=LAUNCH_STATS)
+
+
+@app.route('/api/adult_missions')
+def get_adult_missions():
+    """API для получения миссий в взрослом формате"""
+    return jsonify(ADULT_MISSIONS)
+
+
+@app.route('/api/launch_stats')
+def get_launch_stats():
+    """API для статистики запусков"""
+    return jsonify(LAUNCH_STATS)
+
+
+@app.route('/api/mission_details/<int:mission_id>')
+def get_mission_details(mission_id):
+    """Детальная информация о миссии для взрослых"""
+    mission = next((m for m in ADULT_MISSIONS if m['id'] == mission_id), None)
+    if mission:
+        # Добавляем дополнительные данные
+        mission['timeline'] = generate_timeline(mission_id)
+        mission['technical_analysis'] = get_technical_analysis(mission_id)
+        return jsonify(mission)
+    return jsonify({'error': 'Миссия не найдена'}), 404
+
+
+@app.route('/api/compare_missions', methods=['POST'])
+def compare_missions():
+    """Сравнение нескольких миссий"""
+    data = request.json
+    mission_ids = data.get('mission_ids', [])
+
+    missions_to_compare = []
+    for mission_id in mission_ids[:5]:  # Ограничиваем 5 миссиями
+        mission = next((m for m in ADULT_MISSIONS if m['id'] == mission_id), None)
+        if mission:
+            missions_to_compare.append(mission)
+
+    return jsonify({
+        'missions': missions_to_compare,
+        'comparison': compare_technical_specs(missions_to_compare)
+    })
+
+
+def generate_timeline(mission_id):
+    """Генерация временной линии миссии"""
+    timelines = {
+        101: [
+            {"time": "T-00:00", "event": "Зажигание двигателей"},
+            {"time": "T+00:01", "event": "Отрыв от стартового стола"},
+            {"time": "T+02:41", "event": "Выключение центральных двигателей"},
+            {"time": "T+02:52", "event": "Разделение ступеней"},
+            {"time": "T+08:15", "event": "Выход на орбиту"},
+            {"time": "T+40:00", "event": "Начало входа в атмосферу"},
+            {"time": "T+64:00", "event": "Посадка в океан"}
+        ],
+        102: [
+            {"time": "T-00:00", "event": "Запуск"},
+            {"time": "T+02:00", "event": "Отделение боковых ускорителей"},
+            {"time": "T+08:00", "event": "Выход на околоземную орбиту"},
+            {"time": "T+24:00", "event": "Транслунная инъекция"},
+            {"time": "T+96:00", "event": "Облет Луны"},
+            {"time": "T+240:00", "event": "Возвращение на Землю"}
+        ]
+    }
+    return timelines.get(mission_id, [])
+
+
+def get_technical_analysis(mission_id):
+    """Технический анализ миссии"""
+    analyses = {
+        101: {
+            "innovations": [
+                "Полная система многоразового использования",
+                "Горячая перезаправка на орбите",
+                "Материал теплозащиты из керамических плиток",
+                "Система быстрого повторного использования"
+            ],
+            "risks": [
+                "Сложность одновременной работы 33 двигателей",
+                "Термические нагрузки при входе в атмосферу",
+                "Точность посадки без посадочных ног"
+            ],
+            "significance": "Ключевой шаг к созданию полностью многоразовой транспортной системы для полетов на Марс"
+        },
+        102: {
+            "innovations": [
+                "Новая система аварийного спасения LAS",
+                "Усовершенствованная система жизнеобеспечения",
+                "Автономная навигация в дальнем космосе"
+            ],
+            "risks": [
+                "Первое использование SLS в пилотируемом режиме",
+                "Длительное пребывание за пределами радиационных поясов",
+                "Точность возвращения в атмосферу"
+            ],
+            "significance": "Возвращение человека к Луне после 50-летнего перерыва"
+        }
+    }
+    return analyses.get(mission_id, {})
+
+
+def compare_technical_specs(missions):
+    """Сравнение технических характеристик"""
+    comparison = {
+        "parameters": ["Высота", "Масса", "Полезная нагрузка", "Тяга", "Стоимость запуска"],
+        "values": []
+    }
+
+    for mission in missions:
+        tech = mission.get('technical_details', {})
+        comparison['values'].append({
+            "mission": mission['name'],
+            "height": tech.get('height', 'N/A'),
+            "mass": tech.get('mass', 'N/A'),
+            "payload": tech.get('payload', 'N/A'),
+            "thrust": tech.get('thrust', 'N/A'),
+            "budget": mission.get('budget', 'N/A')
+        })
+
+    return comparison
+
 if __name__ == '__main__':
     # Проверяем существование папок
     import os

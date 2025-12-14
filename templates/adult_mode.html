@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Космический трекер - Режим для взрослых</title>
+    <link rel="stylesheet" href="/static/css/adult_mode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Стили для поиска и уведомлений */
+        .search-box {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--background);
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 9999;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .notification-error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .notification-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .notification-info {
+            background: #3b82f6;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-results h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .comparison-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .clear-filters {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.875rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .clear-filters:hover {
+            background: var(--background);
+        }
+    </style>
+</head>
+<body>
+    <div class="adult-container">
+        <!-- Верхняя панель -->
+        <header class="adult-header">
+            <div class="header-left">
+                <h1><i class="fas fa-satellite"></i> Космический трекер PRO</h1>
+                <div class="mode-switch">
+                    <a href="/" class="kid-mode-btn">
+                        <i class="fas fa-child"></i> Детский режим
+                    </a>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="date-time" id="currentDateTime"></div>
+                <div class="stats-badge">
+                    <i class="fas fa-rocket"></i>
+                    <span id="launchesCount">223</span> запусков в 2023
+                </div>
+                <button class="compare-btn" onclick="showCompareModal()" style="background: var(--secondary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-balance-scale"></i> Сравнить
+                </button>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="adult-main">
+            <!-- Панель фильтров -->
+            <aside class="filters-panel">
+                <div class="filters-header">
+                    <h3><i class="fas fa-filter"></i> Фильтры</h3>
+                    <button class="clear-filters" onclick="clearFilters()">
+                        <i class="fas fa-times"></i>
+                        Очистить
+                    </button>
+                </div>
+
+                <!-- Поиск -->
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Поиск миссий..." onkeyup="searchMissions(this.value)">
+                </div>
+
+                <div class="filter-group">
+                    <h4>Статус</h4>
+                    <div class="filter-options">
+                        <label><input type="checkbox" name="status" value="upcoming" checked> Предстоящие</label>
+                        <label><input type="checkbox" name="status" value="in_progress"> В процессе</label>
+                        <label><input type="checkbox" name="status" value="completed"> Завершенные</label>
+                        <label><input type="checkbox" name="status" value="failed"> Отмененные</label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h4>Организация</h4>
+                    <div class="filter-options">
+                        <label><input type="checkbox" name="company" value="SpaceX" checked> SpaceX</label>
+                        <label><input type="checkbox" name="company" value="NASA"> NASA</label>
+                        <label><input type="checkbox" name="company" value="Роскосмос"> Роскосмос</label>
+                        <label><input type="checkbox" name="company" value="ESA"> ESA</label>
+                        <label><input type="checkbox" name="company" value="ISRO"> ISRO</label>
+                        <label><input type="checkbox" name="company" value="CNSA"> Китай (CNSA)</label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h4>Тип миссии</h4>
+                    <div class="filter-options">
+                        <label><input type="checkbox" name="type" value="orbital_test" checked> Орбитальные</label>
+                        <label><input type="checkbox" name="type" value="lunar"> Лунные</label>
+                        <label><input type="checkbox" name="type" value="martian"> Марсианские</label>
+                        <label><input type="checkbox" name="type" value="scientific"> Научные</label>
+                        <label><input type="checkbox" name="type" value="commercial"> Коммерческие</label>
+                    </div>
+                </div>
+
+                <button class="apply-filters-btn" onclick="applyFilters()">
+                    <i class="fas fa-check"></i> Применить фильтры
+                </button>
+            </aside>
+
+            <!-- Основная область -->
+            <section class="missions-area">
+                <!-- Статистика -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <h4><i class="fas fa-chart-line"></i> Статистика 2023</h4>
+                        <div class="stat-grid">
+                            <div class="stat-item success">
+                                <span class="stat-number">210</span>
+                                <span class="stat-label">Успешных</span>
+                            </div>
+                            <div class="stat-item failed">
+                                <span class="stat-number">13</span>
+                                <span class="stat-label">Неудачных</span>
+                            </div>
+                            <div class="stat-item rate">
+                                <span class="stat-number">94.2%</span>
+                                <span class="stat-label">Успешность</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h4><i class="fas fa-globe-americas"></i> По странам</h4>
+                        <canvas id="countryChart" width="200" height="100"></canvas>
+                    </div>
+                </div>
+
+                <!-- Список миссий -->
+                <div class="missions-list" id="missionsList">
+                    <!-- Миссии будут загружаться через JavaScript -->
+                </div>
+            </section>
+
+            <!-- Боковая панель с деталями -->
+            <aside class="details-panel" id="detailsPanel">
+                <div class="details-header">
+                    <h3><i class="fas fa-info-circle"></i> Детали миссии</h3>
+                    <button class="close-details" onclick="closeDetails()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="details-content" id="detailsContent">
+                    <p class="placeholder-text">Выберите миссию для просмотра деталей</p>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Нижняя панель -->
+        <footer class="adult-footer">
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-database"></i> API документация</a>
+                <a href="#"><i class="fas fa-file-export"></i> Экспорт данных</a>
+                <a href="#"><i class="fas fa-bell"></i> Уведомления</a>
+                <a href="#"><i class="fas fa-cog"></i> Настройки</a>
+            </div>
+            <div class="data-source">
+                Источники данных:
+                <span class="source-badge">SpaceX API</span>
+                <span class="source-badge">NASA API</span>
+                <span class="source-badge">Space-Track.org</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Модальное окно сравнения -->
+    <div class="modal" id="compareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-balance-scale"></i> Сравнение миссий</h3>
+                <button class="close-modal" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="compareContent">
+                <!-- Содержимое сравнения -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/adult_mode.js"></script>
+    <script>
+        // Вспомогательные функции
+        function clearFilters() {
+            document.querySelectorAll('.filter-options input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.filter-options input[type="checkbox"][value="upcoming"]').forEach(cb => cb.checked = true);
+            document.querySelectorAll('.filter-options input[type="checkbox"][value="SpaceX"]').forEach(cb => cb.checked = true);
+            document.querySelectorAll('.filter-options input[type="checkbox"][value="orbital_test"]').forEach(cb => cb.checked = true);
+            document.querySelector('.search-box input').value = '';
+            applyFilters();
+        }
+
+        // Добавляем функцию для совместимости
+        window.clearFilters = clearFilters;
+    </script>
+</body>
+</html>
